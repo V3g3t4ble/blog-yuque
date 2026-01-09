@@ -1,0 +1,22 @@
+---
+import type { TreeNode } from '../utils/fileTree';
+import FileTreeNode from './FileTreeNode.astro';
+import { SiteConfig } from '../config';
+
+interface Props {
+  tree: TreeNode[];
+  currentSlug?: string;
+}
+
+const { tree, currentSlug } = Astro.props;
+---
+
+<div class="py-2">
+  <div class="mb-2 text-zinc-500 text-xs uppercase tracking-wider font-bold px-2 border-b border-zinc-800 pb-2">
+    {SiteConfig.fileTree.rootName}
+  </div>
+
+  {tree.map((node) => (
+    <FileTreeNode node={node} currentSlug={currentSlug} />
+  ))}
+</div>

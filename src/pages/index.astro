@@ -1,0 +1,32 @@
+---
+import TerminalLayout from '../layouts/TerminalLayout.astro';
+import ProjectStats from '../components/ProjectStats.astro';
+---
+
+<TerminalLayout title="Home">
+  <h1>README.md</h1>
+  
+  <p>
+    Welcome to my digital garden. This site is designed to resemble a terminal environment.
+    Use the file explorer on the left to navigate through my articles.
+  </p>
+
+  <ProjectStats />
+
+  <h2>## Usage</h2>
+  
+  <pre><code>cd ./posts
+ls -la</code></pre>
+
+  <p>
+    Navigate through the directory structure to find articles on various topics.
+    All content is statically generated and optimized for speed.
+  </p>
+
+  <h2>## Tech Stack</h2>
+  <ul>
+    <li>Astro</li>
+    <li>Tailwind CSS</li>
+    <li>TypeScript</li>
+  </ul>
+</TerminalLayout>

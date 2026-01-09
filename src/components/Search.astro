@@ -1,0 +1,113 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  posts: CollectionEntry<'posts'>[];
+}
+
+const { posts } = Astro.props;
+const BASE_URL = import.meta.env.BASE_URL;
+
+// Prepare search index
+const searchIndex = posts.map(post => ({
+  title: post.data.title,
+  description: post.data.description,
+  tags: post.data.tags || [],
+  slug: post.slug,
+}));
+---
+
+<div class="search-widget mb-4 px-2 pt-2">
+  <div class="relative group">
+    <div class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none text-zinc-500">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    </div>
+    <input 
+      type="text" 
+      id="search-input" 
+      placeholder="find . -name '...'"
+      class="w-full bg-zinc-950/50 border border-zinc-700 text-zinc-300 text-xs rounded pl-8 pr-2 py-1.5 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 placeholder-zinc-600 font-mono transition-colors"
+    />
+    <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+        <span class="text-[10px] text-zinc-600 border border-zinc-700 rounded px-1 hidden group-focus-within:inline-block">ESC</span>
+    </div>
+  </div>
+</div>
+
+<div id="search-results" class="hidden px-2 pb-4 overflow-y-auto">
+    <div class="text-[10px] text-zinc-500 mb-2 uppercase tracking-wider font-bold px-2">Search Results</div>
+    <ul id="results-list" class="space-y-1">
+        <!-- Results will be injected here -->
+    </ul>
+</div>
+
+<script define:vars={{ searchIndex, BASE_URL }}>
+  const input = document.getElementById('search-input');
+  const resultsContainer = document.getElementById('search-results');
+  const resultsList = document.getElementById('results-list');
+  const fileTreeContainer = document.getElementById('file-tree-container');
+
+  // Helper to handle base URL
+  const getBasePath = () => {
+    return BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
+  };
+
+  input?.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase();
+    
+    if (query.length === 0) {
+      resultsContainer?.classList.add('hidden');
+      if (fileTreeContainer) fileTreeContainer.classList.remove('hidden');
+      return;
+    }
+
+    // Hide file tree, show results
+    if (fileTreeContainer) fileTreeContainer.classList.add('hidden');
+    resultsContainer?.classList.remove('hidden');
+
+    // Filter logic
+    const results = searchIndex.filter(item => {
+        const titleMatch = item.title.toLowerCase().includes(query);
+        const tagsMatch = item.tags.some(tag => tag.toLowerCase().includes(query));
+        const slugMatch = item.slug.toLowerCase().includes(query);
+        return titleMatch || tagsMatch || slugMatch;
+    });
+
+    // Render results
+    if (resultsList) {
+        resultsList.innerHTML = '';
+        if (results.length === 0) {
+            resultsList.innerHTML = '<li class="text-xs text-zinc-500 italic px-2">No matches found</li>';
+            return;
+        }
+
+        const base = getBasePath();
+
+        results.forEach(item => {
+            const li = document.createElement('li');
+            const href = `${base}posts/${item.slug}`.replace(/\/+/g, '/');
+            
+            li.innerHTML = `
+                <a href="${href}" class="block p-2 rounded hover:bg-zinc-800 transition-colors group">
+                    <div class="text-green-400 text-xs font-bold font-mono flex items-center gap-2">
+                        <span class="opacity-50 group-hover:opacity-100">></span>
+                        ${item.title}
+                    </div>
+                    ${item.description ? `<div class="text-[10px] text-zinc-500 mt-0.5 truncate pl-3">${item.description}</div>` : ''}
+                    <div class="text-[10px] text-zinc-600 mt-1 pl-3 font-mono text-ellipsis overflow-hidden whitespace-nowrap">${item.slug}</div>
+                </a>
+            `;
+            resultsList.appendChild(li);
+        });
+    }
+  });
+
+  // ESC to clear
+  input?.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        input.value = '';
+        input.dispatchEvent(new Event('input'));
+        input.blur();
+    }
+  });
+</script>
