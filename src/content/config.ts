@@ -1,12 +1,13 @@
 import { defineCollection, z } from 'astro:content';
+import { yuqueLoader } from '../loaders/yuque';
 
 const posts = defineCollection({
-  type: 'content',
+  loader: yuqueLoader(),
   schema: z.object({
     title: z.string(),
     date: z.date().optional(),
     description: z.string().optional(),
-    tags: z.array(z.string()).optional(),
+    sort: z.number().optional(), // Add sort field
   }),
 });
 

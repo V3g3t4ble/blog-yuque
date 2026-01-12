@@ -8,7 +8,7 @@ export default defineConfig({
   // GitHub Pages deployment configuration
   // Replace 'https://<user>.github.io' with your site's URL
   // Replace '/<project-name>' with your project's repository name if not at root
-  site: 'https://example.com',
+  site: 'https://v3g3t4ble.space',
   base: '/',
   build: {
     format: 'file'

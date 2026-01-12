@@ -16,8 +16,6 @@ const lastUpdated = posts.length > 0
   ? new Date(Math.max(...posts.map(p => getPostDate(p).getTime())))
   : new Date();
 
-const tags = [...new Set(posts.flatMap(p => p.data.tags || []))];
-
 // Format bytes for "file size" simulation
 const totalSizeKB = (posts.reduce((acc, post) => acc + post.body.length, 0) / 1024).toFixed(1);
 ---
@@ -56,15 +54,8 @@ const totalSizeKB = (posts.reduce((acc, post) => acc + post.body.length, 0) / 10
                 </div>
             </div>
             
-            <div>
-                <h3 class="text-zinc-500 uppercase tracking-wider text-xs font-bold mb-3 border-b border-zinc-800 pb-1">Tags ({tags.length})</h3>
-                <div class="flex flex-wrap gap-2">
-                    {tags.map(tag => (
-                        <span class="px-2 py-0.5 bg-zinc-800 text-zinc-300 rounded text-xs hover:bg-zinc-700 transition-colors">
-                            #{tag}
-                        </span>
-                    ))}
-                </div>
+            <div class="flex items-center justify-center text-zinc-700 text-xs italic">
+                 // System Stats //
             </div>
         </div>
         

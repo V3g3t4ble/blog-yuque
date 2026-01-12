@@ -1,0 +1,162 @@
+---
+import { SiteConfig } from '../config';
+
+interface Props {
+  password?: string;
+}
+
+const { password = SiteConfig.password } = Astro.props;
+---
+
+<div id="login-screen" class="fixed inset-0 bg-zinc-950 text-gray-200 font-mono z-50 flex flex-col items-center justify-center hidden">
+  <div class="w-full max-w-md p-4">
+    <div class="mb-8 text-center">
+      <h1 class="text-4xl font-bold mb-2 text-green-500">TERMINAL LOGIN</h1>
+      <p class="text-zinc-500 text-sm">Restricted Access System v1.0</p>
+    </div>
+
+    <div class="bg-zinc-900/50 border border-zinc-800 p-8 rounded shadow-2xl">
+      <div class="flex flex-col gap-4">
+        <div class="font-bold text-blue-400">
+          {SiteConfig.username}@{SiteConfig.hostname} login:
+        </div>
+        
+        <div class="flex items-center gap-2">
+           <span class="text-green-500">Password:</span>
+           <div class="relative flex-1">
+             <!-- Mask to show asterisks -->
+             <div id="pwd-mask" class="absolute inset-0 pointer-events-none text-zinc-400 font-mono flex items-center"></div>
+             <!-- Actual input (transparent text) -->
+             <input 
+               type="password" 
+               id="password-input"
+               class="bg-transparent border-none outline-none text-transparent caret-green-500 w-full focus:ring-0 p-0 font-mono relative z-10"
+               autocomplete="off"
+             />
+           </div>
+        </div>
+
+        <div id="login-error" class="text-red-500 text-xs mt-2 hidden animate-pulse"></div>
+        
+        <button 
+          id="login-btn"
+          class="mt-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 px-4 rounded text-xs border border-zinc-700 transition-colors uppercase tracking-wider"
+        >
+          Authenticate
+        </button>
+      </div>
+    </div>
+    
+    <div class="mt-12 text-center text-[10px] text-zinc-600">
+      <p>UNAUTHORIZED ACCESS IS PROHIBITED</p>
+      <p class="mt-1">IP LOGGED: {new Date().toISOString()}</p>
+    </div>
+  </div>
+</div>
+
+<div id="app-content" class="invisible h-full flex flex-col overflow-hidden">
+  <slot />
+</div>
+
+<!-- Auth Check Script - Moved to bottom to ensure DOM elements exist -->
+<script define:vars={{ password }}>
+  // Simple hash function to avoid storing plain text in localStorage
+  // Ideally we should use a proper hash but for this demo simple string match is fine for the gate logic
+  const SESSION_KEY = 'terminal_blog_auth';
+  
+  const checkAuth = () => {
+    // Security check: Validate stored key against current config
+    const storedKey = sessionStorage.getItem('terminal_blog_key');
+    if (storedKey && storedKey !== password) {
+        console.warn('Stored session invalid: Password changed');
+        sessionStorage.removeItem(SESSION_KEY);
+        sessionStorage.removeItem('terminal_blog_key');
+    }
+
+    const isAuth = sessionStorage.getItem(SESSION_KEY) === 'true';
+    const loginScreen = document.getElementById('login-screen');
+    const appContent = document.getElementById('app-content');
+
+    if (!loginScreen || !appContent) {
+        console.error('LoginGate: DOM elements not found');
+        return;
+    }
+
+    if (isAuth) {
+      loginScreen.style.display = 'none';
+      appContent.classList.remove('invisible');
+    } else {
+      loginScreen.style.display = 'flex';
+      appContent.classList.add('invisible');
+      
+      // Focus password input
+      setTimeout(() => {
+        const pwdInput = document.getElementById('password-input');
+        if (pwdInput) pwdInput.focus();
+      }, 100);
+    }
+  };
+
+  // Run on load
+  checkAuth();
+  
+  // Listen for auth failures from other components
+  window.addEventListener('auth:failed', () => {
+      sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem('terminal_blog_key');
+      checkAuth();
+      
+      const errorMsg = document.getElementById('login-error');
+      if (errorMsg) {
+        errorMsg.style.display = 'block';
+        errorMsg.textContent = 'Session Expired: Please re-authenticate';
+      }
+  });
+
+  // Expose login function
+  const attemptLogin = (inputPassword) => {
+    if (inputPassword === password) {
+      sessionStorage.setItem(SESSION_KEY, 'true');
+      // Store password for decryption usage in current session
+      sessionStorage.setItem('terminal_blog_key', inputPassword);
+      
+      checkAuth();
+      
+      // Dispatch event for components to react
+      window.dispatchEvent(new CustomEvent('auth:success', { detail: { password: inputPassword } }));
+      
+      return true;
+    } else {
+      const errorMsg = document.getElementById('login-error');
+      if (errorMsg) {
+        errorMsg.style.display = 'block';
+        errorMsg.textContent = 'Access Denied: Incorrect Password';
+      }
+      return false;
+    }
+  };
+
+  // Event Listeners
+  const pwdInput = document.getElementById('password-input');
+  const pwdMask = document.getElementById('pwd-mask');
+  const loginBtn = document.getElementById('login-btn');
+
+  if (pwdInput && pwdMask && loginBtn) {
+    // Mask handling
+    pwdInput.addEventListener('input', (e) => {
+      pwdMask.textContent = '*'.repeat(e.target.value.length);
+    });
+
+    // Enter key
+    pwdInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        attemptLogin(e.target.value);
+      }
+    });
+
+    // Button click
+    loginBtn.addEventListener('click', () => {
+      attemptLogin(pwdInput.value);
+    });
+  }
+</script>

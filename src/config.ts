@@ -13,10 +13,13 @@ export const SiteConfig = {
 
   // File tree header
   fileTree: {
-    rootName: '~/',
+    rootName: '~/blog',
   },
 
   // Metadata
   title: 'V3g3t4ble\'s Blog',
   description: 'A terminal-styled blog built with Astro',
+  
+  // Security
+  password: 'admin', // Simple password for access
 };
