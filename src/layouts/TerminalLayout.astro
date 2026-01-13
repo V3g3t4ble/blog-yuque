@@ -84,6 +84,21 @@ const tree = buildFileTree(posts);
       .prose hr {
         border-color: #27272a;
       }
+      
+      /* Force readable text colors in prose to override inline styles from content sources */
+      .prose :where(p, li, td, blockquote, div:not(.not-prose)) {
+        color: #e4e4e7 !important; /* zinc-200 */
+      }
+      
+      /* Re-assert specific colors that should be different */
+      .prose a { color: #60a5fa !important; } /* blue-400 */
+      .prose strong, .prose b { color: #fff !important; }
+      .prose code { color: #f472b6 !important; } /* pink-400 */
+      .prose th { color: #22c55e !important; } /* green-500 */
+      
+      /* Protect code blocks from global color overrides */
+      .prose pre { color: inherit !important; }
+      .prose pre code { color: inherit !important; }
     </style>
   </head>
   <body class="bg-zinc-950 text-gray-200 font-mono h-screen flex flex-col overflow-hidden selection:bg-green-900 selection:text-green-100">
