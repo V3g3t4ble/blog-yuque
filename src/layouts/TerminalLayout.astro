@@ -86,13 +86,35 @@ const tree = buildFileTree(posts);
       }
       
       /* Force readable text colors in prose to override inline styles from content sources */
-      .prose :where(p, li, td, blockquote, div:not(.not-prose)) {
+      /* 1. Force container colors (including div, but be careful with inheritance) */
+      .prose :where(
+        h1, h2, h3, h4, h5, h6,
+        p, ul, ol, li,
+        table, thead, tbody, tr, th, td,
+        blockquote,
+        dl, dt, dd,
+        figcaption,
+        div:not(.not-prose):not(.astro-code)
+      ) {
         color: #e4e4e7 !important; /* zinc-200 */
+      }
+
+      /* 2. Force spans inside "Safe" containers to inherit color (overriding inline styles) */
+      /* Exclude 'div' from this list to prevent breaking code block syntax highlighting (which uses spans) */
+      .prose :where(
+        h1, h2, h3, h4, h5, h6,
+        p, ul, ol, li,
+        table, thead, tbody, tr, th, td,
+        blockquote,
+        dl, dt, dd,
+        figcaption
+      ) span {
+        color: inherit !important;
       }
       
       /* Re-assert specific colors that should be different */
-      .prose a { color: #60a5fa !important; } /* blue-400 */
-      .prose strong, .prose b { color: #fff !important; }
+      .prose a, .prose a span { color: #60a5fa !important; } /* blue-400 */
+      .prose strong, .prose b, .prose strong span, .prose b span { color: #fff !important; }
       .prose code { color: #f472b6 !important; } /* pink-400 */
       .prose th { color: #22c55e !important; } /* green-500 */
       
