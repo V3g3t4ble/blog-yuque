@@ -15,3 +15,5 @@ Fork本项目，在Cloudflare Pages中部署，配置环境变量
 ![image-20260113115300312](https://blog-1258572842.cos.ap-nanjing.myqcloud.com/obsidian/20260113115300404.png)
 
 ![image-20260113115326324](https://blog-1258572842.cos.ap-nanjing.myqcloud.com/obsidian/20260113115326374.png)
+
+![image-20260113120041663](https://blog-1258572842.cos.ap-nanjing.myqcloud.com/obsidian/20260113120041707.png)
