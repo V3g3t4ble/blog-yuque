@@ -48,6 +48,42 @@ const tree = buildFileTree(posts);
       ::-webkit-scrollbar-thumb:hover {
         background: #52525b;
       }
+      
+      /* Typography Overrides for Terminal Theme */
+      .prose blockquote {
+        color: #a1a1aa; /* zinc-400 */
+        border-left-color: #22c55e; /* green-500 */
+        background: rgba(34, 197, 94, 0.05);
+        font-style: normal;
+        padding: 0.5rem 1rem;
+        border-radius: 0 0.25rem 0.25rem 0;
+      }
+      .prose blockquote p:first-of-type::before,
+      .prose blockquote p:last-of-type::after {
+        content: none;
+      }
+      
+      .prose table {
+        border-collapse: collapse;
+        border: 1px solid #27272a; /* zinc-800 */
+        width: 100%;
+        margin-top: 1.5em;
+        margin-bottom: 1.5em;
+      }
+      .prose th {
+        background: #18181b; /* zinc-900 */
+        color: #22c55e; /* green-500 */
+        border: 1px solid #27272a;
+        padding: 0.75rem;
+        text-align: left;
+      }
+      .prose td {
+        border: 1px solid #27272a;
+        padding: 0.75rem;
+      }
+      .prose hr {
+        border-color: #27272a;
+      }
     </style>
   </head>
   <body class="bg-zinc-950 text-gray-200 font-mono h-screen flex flex-col overflow-hidden selection:bg-green-900 selection:text-green-100">

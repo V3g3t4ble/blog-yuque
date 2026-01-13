@@ -1,12 +1,17 @@
 ---
 import { SiteConfig } from '../config';
+import CryptoJS from 'crypto-js';
 
 interface Props {
   password?: string;
 }
 
 const { password = SiteConfig.password } = Astro.props;
+// Calculate SHA256 hash of the password to avoid exposing plaintext in client source
+const passwordHash = CryptoJS.SHA256(password).toString();
 ---
+
+<div id="auth-config" data-hash={passwordHash} class="hidden"></div>
 
 <div id="login-screen" class="fixed inset-0 bg-zinc-950 text-gray-200 font-mono z-50 flex flex-col items-center justify-center hidden">
   <div class="w-full max-w-md p-4">
@@ -59,7 +64,9 @@ const { password = SiteConfig.password } = Astro.props;
 </div>
 
 <!-- Auth Check Script - Moved to bottom to ensure DOM elements exist -->
-<script define:vars={{ password }}>
+<script>
+  import CryptoJS from 'crypto-js';
+
   // Simple hash function to avoid storing plain text in localStorage
   // Ideally we should use a proper hash but for this demo simple string match is fine for the gate logic
   const SESSION_KEY = 'terminal_blog_auth';
@@ -67,10 +74,16 @@ const { password = SiteConfig.password } = Astro.props;
   const checkAuth = () => {
     // Security check: Validate stored key against current config
     const storedKey = sessionStorage.getItem('terminal_blog_key');
-    if (storedKey && storedKey !== password) {
-        console.warn('Stored session invalid: Password changed');
-        sessionStorage.removeItem(SESSION_KEY);
-        sessionStorage.removeItem('terminal_blog_key');
+    const configEl = document.getElementById('auth-config');
+    const targetHash = configEl?.dataset.hash;
+
+    if (storedKey && targetHash) {
+        const storedHash = CryptoJS.SHA256(storedKey).toString();
+        if (storedHash !== targetHash) {
+            console.warn('Stored session invalid: Password changed');
+            sessionStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem('terminal_blog_key');
+        }
     }
 
     const isAuth = sessionStorage.getItem(SESSION_KEY) === 'true';
@@ -115,7 +128,13 @@ const { password = SiteConfig.password } = Astro.props;
 
   // Expose login function
   const attemptLogin = (inputPassword) => {
-    if (inputPassword === password) {
+    const configEl = document.getElementById('auth-config');
+    const targetHash = configEl?.dataset.hash;
+    
+    // Hash input for comparison
+    const inputHash = CryptoJS.SHA256(inputPassword).toString();
+
+    if (inputHash === targetHash) {
       sessionStorage.setItem(SESSION_KEY, 'true');
       // Store password for decryption usage in current session
       sessionStorage.setItem('terminal_blog_key', inputPassword);

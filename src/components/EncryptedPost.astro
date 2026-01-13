@@ -49,7 +49,7 @@ const encrypted = CryptoJS.AES.encrypt(content, SiteConfig.password).toString();
             
             if (decryptedMarkdown) {
                 // Success
-                const html = marked.parse(decryptedMarkdown);
+                const html = marked.parse(decryptedMarkdown, { breaks: true, gfm: true });
                 target.innerHTML = html;
                 
                 container.classList.remove('hidden');
