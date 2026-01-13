@@ -21,5 +21,5 @@ export const SiteConfig = {
   description: 'A blog about cybersecurity research and development',
   
   // Security
-  password: 'Yhp20030429@', // Simple password for access
+  password: import.meta.env.BLOG_PASSWORD,
 };

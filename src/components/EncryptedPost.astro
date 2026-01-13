@@ -1,81 +1,97 @@
 ---
 import { SiteConfig } from '../config';
 import CryptoJS from 'crypto-js';
+import { marked } from 'marked';
 
 interface Props {
   content: string; // Markdown source
 }
 
 const { content } = Astro.props;
+const isEnabled = !!SiteConfig.password;
 
-// Server-side encryption
-const encrypted = CryptoJS.AES.encrypt(content, SiteConfig.password).toString();
+let encrypted = '';
+let html = '';
+
+if (isEnabled) {
+    // Server-side encryption
+    encrypted = CryptoJS.AES.encrypt(content, SiteConfig.password).toString();
+} else {
+    // Render Markdown directly
+    html = await marked.parse(content, { breaks: true, gfm: true });
+}
 ---
 
-<div id="encrypted-container" class="hidden">
-    <div id="encrypted-data" data-content={encrypted} class="hidden"></div>
-    <div id="decrypted-content" class="prose prose-invert prose-green max-w-none">
-        <!-- Content will be injected here -->
-        <div class="animate-pulse text-zinc-500">Decrypting content stream...</div>
-    </div>
-</div>
+{ !isEnabled ? (
+    <div class="prose prose-invert prose-green max-w-none" set:html={html} />
+) : (
+    <>
+        <div id="encrypted-container" class="hidden">
+            <div id="encrypted-data" data-content={encrypted} class="hidden"></div>
+            <div id="decrypted-content" class="prose prose-invert prose-green max-w-none">
+                <!-- Content will be injected here -->
+                <div class="animate-pulse text-zinc-500">Decrypting content stream...</div>
+            </div>
+        </div>
 
-<div id="encryption-lock" class="border border-red-900/50 bg-red-950/10 p-4 rounded text-center text-red-400 font-mono text-sm my-8">
-    <div class="mb-2 text-2xl">🔒</div>
-    <div class="font-bold">ENCRYPTED DATA BLOB</div>
-    <div class="text-xs opacity-70 mt-1">Awaiting authentication key...</div>
-    <div class="text-[10px] text-zinc-600 mt-4 break-all font-mono opacity-50">
-        {encrypted.substring(0, 64)}...
-    </div>
-</div>
+        <div id="encryption-lock" class="border border-red-900/50 bg-red-950/10 p-4 rounded text-center text-red-400 font-mono text-sm my-8">
+            <div class="mb-2 text-2xl">🔒</div>
+            <div class="font-bold">ENCRYPTED DATA BLOB</div>
+            <div class="text-xs opacity-70 mt-1">Awaiting authentication key...</div>
+            <div class="text-[10px] text-zinc-600 mt-4 break-all font-mono opacity-50">
+                {encrypted.substring(0, 64)}...
+            </div>
+        </div>
 
-<script>
-    import CryptoJS from 'crypto-js';
-    import { marked } from 'marked';
+        <script>
+            import CryptoJS from 'crypto-js';
+            import { marked } from 'marked';
 
-    const renderContent = (password) => {
-        const dataEl = document.getElementById('encrypted-data');
-        const container = document.getElementById('encrypted-container');
-        const lock = document.getElementById('encryption-lock');
-        const target = document.getElementById('decrypted-content');
+            const renderContent = (password) => {
+                const dataEl = document.getElementById('encrypted-data');
+                const container = document.getElementById('encrypted-container');
+                const lock = document.getElementById('encryption-lock');
+                const target = document.getElementById('decrypted-content');
 
-        if (!dataEl || !target || !container || !lock) return;
+                if (!dataEl || !target || !container || !lock) return;
 
-        const encrypted = dataEl.dataset.content;
-        
-        try {
-            const bytes = CryptoJS.AES.decrypt(encrypted, password);
-            const decryptedMarkdown = bytes.toString(CryptoJS.enc.Utf8);
-            
-            if (decryptedMarkdown) {
-                // Success
-                const html = marked.parse(decryptedMarkdown, { breaks: true, gfm: true });
-                target.innerHTML = html;
+                const encrypted = dataEl.dataset.content;
                 
-                container.classList.remove('hidden');
-                lock.classList.add('hidden');
-            } else {
-                throw new Error('Empty decryption result');
+                try {
+                    const bytes = CryptoJS.AES.decrypt(encrypted, password);
+                    const decryptedMarkdown = bytes.toString(CryptoJS.enc.Utf8);
+                    
+                    if (decryptedMarkdown) {
+                        // Success
+                        const html = marked.parse(decryptedMarkdown, { breaks: true, gfm: true });
+                        target.innerHTML = html;
+                        
+                        container.classList.remove('hidden');
+                        lock.classList.add('hidden');
+                    } else {
+                        throw new Error('Empty decryption result');
+                    }
+                } catch (e) {
+                    console.error('Decryption failed', e);
+                    // Don't show content, maybe show error in lock
+                    lock.innerHTML += `<div class="text-red-500 mt-2">Decryption Error: Invalid Key</div>`;
+                    
+                    // Dispatch failure event to force logout if key is invalid
+                    window.dispatchEvent(new CustomEvent('auth:failed'));
+                }
+            };
+
+            // Check if we already have the key
+            const savedKey = sessionStorage.getItem('terminal_blog_key');
+            if (savedKey) {
+                renderContent(savedKey);
             }
-        } catch (e) {
-            console.error('Decryption failed', e);
-            // Don't show content, maybe show error in lock
-            lock.innerHTML += `<div class="text-red-500 mt-2">Decryption Error: Invalid Key</div>`;
-            
-            // Dispatch failure event to force logout if key is invalid
-            window.dispatchEvent(new CustomEvent('auth:failed'));
-        }
-    };
 
-    // Check if we already have the key
-    const savedKey = sessionStorage.getItem('terminal_blog_key');
-    if (savedKey) {
-        renderContent(savedKey);
-    }
-
-    // Listen for new login
-    window.addEventListener('auth:success', (e: any) => {
-        const pwd = e.detail.password;
-        renderContent(pwd);
-    });
-</script>
+            // Listen for new login
+            window.addEventListener('auth:success', (e: any) => {
+                const pwd = e.detail.password;
+                renderContent(pwd);
+            });
+        </script>
+    </>
+)}

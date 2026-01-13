@@ -105,12 +105,24 @@ const tree = buildFileTree(posts);
         h1, h2, h3, h4, h5, h6,
         p, ul, ol, li,
         table, thead, tbody, tr, th, td,
-        blockquote,
         dl, dt, dd,
         figcaption
       ) span {
         color: inherit !important;
       }
+      
+      /* 3. Aggressive reset for Blockquotes: Explicitly force color on common containers */
+      .prose blockquote,
+      .prose blockquote p,
+      .prose blockquote span,
+      .prose blockquote div {
+        color: #a1a1aa !important;
+      }
+      
+      /* Restore link/code/bold colors inside blockquotes */
+      .prose blockquote a, .prose blockquote a span { color: #60a5fa !important; }
+      .prose blockquote code, .prose blockquote code span { color: #f472b6 !important; }
+      .prose blockquote strong, .prose blockquote b, .prose blockquote strong span, .prose blockquote b span { color: #fff !important; }
       
       /* Re-assert specific colors that should be different */
       .prose a, .prose a span { color: #60a5fa !important; } /* blue-400 */

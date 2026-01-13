@@ -80,6 +80,13 @@ async function processContent(content: string, logger: any): Promise<string> {
     }
   }
 
+  // Remove inline styles that set color (black text on black background)
+  // Regex to match style="..." containing "color:" and remove the whole style attribute or just the color property?
+  // Safest is to remove the whole style attribute if it contains color, as it's usually just color/font-size
+  // which we want to override with our theme anyway.
+  // Matches: style="...color:..." (case insensitive)
+  newContent = newContent.replace(/\s+style="[^"]*color:[^"]*"/gi, '');
+
   return newContent;
 }
 
