@@ -1,43 +1,17 @@
-# Astro Starter Kit: Minimal
+# yuque-blog
+一个基于Cloudflare Pages的博客，使用Astro框架，从Yuque知识库中获取文章内容。
 
-```sh
-npm create astro@latest -- --template minimal
-```
+## 部署
+Fork本项目，在Cloudflare Pages中部署，配置环境变量
+- `BLOG_PASSWORD`：博客登录密码
+- `YUQUE_TOKEN`：Yuque API Token
+- `YUQUE_LOGIN`：Yuque用户登录名（或组织登录名）
+- `YUQUE_REPO`：Yuque知识库（Repo）的Slug
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+并开启Deploy Hooks
 
-## 🚀 Project Structure
+在语雀中配置
 
-Inside of your Astro project, you'll see the following folders and files:
+![image-20260113115300312](https://blog-1258572842.cos.ap-nanjing.myqcloud.com/obsidian/20260113115300404.png)
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+![image-20260113115326324](https://blog-1258572842.cos.ap-nanjing.myqcloud.com/obsidian/20260113115326374.png)
