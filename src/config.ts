@@ -18,8 +18,8 @@ export const SiteConfig = {
 
   // Metadata
   title: 'V3g3t4ble\'s Blog',
-  description: 'A terminal-styled blog built with Astro',
+  description: 'A blog about cybersecurity research and development',
   
   // Security
-  password: 'admin', // Simple password for access
+  password: 'Yhp20030429@', // Simple password for access
 };
