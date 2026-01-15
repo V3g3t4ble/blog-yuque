@@ -1,0 +1,195 @@
+---
+import { SiteConfig } from '../../config';
+import CryptoJS from 'crypto-js';
+
+interface Props {
+  password?: string;
+}
+
+const { password = SiteConfig.password } = Astro.props;
+const isEnabled = !!password;
+const passwordHash = isEnabled ? CryptoJS.SHA256(password).toString() : '';
+---
+
+{!isEnabled ? (
+  <slot />
+) : (
+  <>
+    <div id="typora-auth-config" data-hash={passwordHash} class="hidden"></div>
+
+    <div id="typora-login" class="typora-login hidden" aria-hidden="true">
+      <div class="typora-login-backdrop"></div>
+      <div class="typora-login-modal" role="dialog" aria-modal="true">
+        <div class="typora-login-title">{SiteConfig.title}</div>
+        <div class="typora-login-subtitle">请输入访问密码</div>
+
+        <input id="typora-password" class="typora-login-input" type="password" autocomplete="off" />
+        <div id="typora-login-error" class="typora-login-error hidden"></div>
+
+        <button id="typora-login-btn" class="typora-login-btn" type="button">登录</button>
+      </div>
+    </div>
+
+    <div id="typora-app" class="hidden">
+      <slot />
+    </div>
+
+    <script>
+      import CryptoJS from 'crypto-js';
+
+      const SESSION_KEY = 'typora_blog_auth';
+
+      const showLogin = () => {
+        const login = document.getElementById('typora-login');
+        const app = document.getElementById('typora-app');
+        if (!login || !app) return;
+        login.setAttribute('aria-hidden', 'false');
+        login.classList.remove('hidden');
+        app.classList.add('hidden');
+        setTimeout(() => {
+          const input = document.getElementById('typora-password');
+          if (input instanceof HTMLInputElement) input.focus();
+        }, 50);
+      };
+
+      const showApp = () => {
+        const login = document.getElementById('typora-login');
+        const app = document.getElementById('typora-app');
+        if (!login || !app) return;
+        login.setAttribute('aria-hidden', 'true');
+        login.classList.add('hidden');
+        app.classList.remove('hidden');
+      };
+
+      const validate = (inputPassword) => {
+        const cfg = document.getElementById('typora-auth-config');
+        const targetHash = cfg?.dataset.hash;
+        if (!targetHash) return false;
+        const inputHash = CryptoJS.SHA256(inputPassword).toString();
+        return inputHash === targetHash;
+      };
+
+      const setError = (msg) => {
+        const el = document.getElementById('typora-login-error');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.remove('hidden');
+      };
+
+      const clearError = () => {
+        const el = document.getElementById('typora-login-error');
+        if (!el) return;
+        el.textContent = '';
+        el.classList.add('hidden');
+      };
+
+      const attempt = () => {
+        const input = document.getElementById('typora-password');
+        if (!(input instanceof HTMLInputElement)) return;
+        clearError();
+        if (validate(input.value)) {
+          sessionStorage.setItem(SESSION_KEY, 'true');
+          showApp();
+        } else {
+          setError('密码错误');
+        }
+      };
+
+      const init = () => {
+        const isAuth = sessionStorage.getItem(SESSION_KEY) === 'true';
+        if (isAuth) showApp();
+        else showLogin();
+
+        const input = document.getElementById('typora-password');
+        const btn = document.getElementById('typora-login-btn');
+
+        if (input instanceof HTMLInputElement) {
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') attempt();
+          });
+          input.addEventListener('input', () => clearError());
+        }
+        btn?.addEventListener('click', () => attempt());
+      };
+
+      init();
+    </script>
+
+    <style>
+      .typora-login.hidden,
+      .typora-login-error.hidden,
+      #typora-app.hidden {
+        display: none;
+      }
+
+      .typora-login {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: grid;
+        place-items: center;
+        font-family: 'Inter', system-ui, sans-serif;
+      }
+      .typora-login-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(17, 24, 39, 0.12);
+        backdrop-filter: blur(6px);
+      }
+      .typora-login-modal {
+        position: relative;
+        width: min(420px, calc(100vw - 48px));
+        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16);
+        padding: 22px;
+      }
+      .typora-login-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 4px;
+      }
+      .typora-login-subtitle {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 14px;
+      }
+      .typora-login-input {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        padding: 10px 12px;
+        font-size: 14px;
+        outline: none;
+        color: #111827;
+        background: #ffffff;
+      }
+      .typora-login-input:focus {
+        border-color: rgba(37, 99, 235, 0.55);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      }
+      .typora-login-error {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #dc2626;
+      }
+      .typora-login-btn {
+        margin-top: 16px;
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid rgba(37, 99, 235, 0.18);
+        background: #2563eb;
+        color: #ffffff;
+        padding: 10px 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .typora-login-btn:hover {
+        background: #1d4ed8;
+      }
+    </style>
+  </>
+)}

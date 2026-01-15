@@ -1,0 +1,79 @@
+---
+import { getCollection } from 'astro:content';
+import { getPostDate } from '../../utils/date';
+
+const posts = await getCollection('posts');
+
+const totalPosts = posts.length;
+const totalWords = posts.reduce((acc, post) => {
+  const words = post.body.trim().split(/\s+/).length;
+  return acc + words;
+}, 0);
+
+const lastUpdated = posts.length > 0
+  ? new Date(Math.max(...posts.map(p => getPostDate(p).getTime())))
+  : new Date();
+
+const totalSizeKB = (posts.reduce((acc, post) => acc + post.body.length, 0) / 1024).toFixed(1);
+---
+
+<div class="typora-stats">
+  <div class="typora-stats-title">概览</div>
+  <div class="typora-stats-grid">
+    <div class="typora-stats-item">
+      <div class="k">文章</div>
+      <div class="v">{totalPosts}</div>
+    </div>
+    <div class="typora-stats-item">
+      <div class="k">字数</div>
+      <div class="v">~{totalWords}</div>
+    </div>
+    <div class="typora-stats-item">
+      <div class="k">内容大小</div>
+      <div class="v">{totalSizeKB} KB</div>
+    </div>
+    <div class="typora-stats-item">
+      <div class="k">最近更新</div>
+      <div class="v">{lastUpdated.toISOString().split('T')[0]}</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .typora-stats {
+    margin: 18px 0 24px;
+    padding: 14px 14px 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    background: #fafafa;
+  }
+  .typora-stats-title {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .typora-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+  }
+  .typora-stats-item .k {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 2px;
+  }
+  .typora-stats-item .v {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 600;
+  }
+  @media (max-width: 640px) {
+    .typora-stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+

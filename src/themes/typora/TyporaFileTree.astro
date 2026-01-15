@@ -1,0 +1,30 @@
+---
+import type { TreeNode } from '../../utils/fileTree';
+import TyporaFileTreeNode from './TyporaFileTreeNode.astro';
+
+interface Props {
+  tree: TreeNode[];
+  currentSlug?: string;
+}
+
+const { tree, currentSlug } = Astro.props;
+---
+
+<div class="typora-tree">
+  <div class="typora-tree-body">
+    {tree.map((node) => (
+      <TyporaFileTreeNode node={node} currentSlug={currentSlug} />
+    ))}
+  </div>
+</div>
+
+<style>
+  .typora-tree {
+    padding: 10px 10px 14px;
+  }
+  .typora-tree-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+</style>

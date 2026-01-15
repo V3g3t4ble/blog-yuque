@@ -1,0 +1,86 @@
+---
+import type { TreeNode } from '../../utils/fileTree';
+
+interface Props {
+  node: TreeNode;
+  currentSlug?: string;
+  depth?: number;
+}
+
+const { node, currentSlug, depth = 0 } = Astro.props;
+const isActive = node.slug === currentSlug;
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
+const href = node.slug ? `${base}posts/${node.slug}`.replace(/\/+/g, '/') : '';
+---
+
+<div class="typora-tree-row" style={`--depth: ${depth}`}>
+  {node.type === 'directory' || node.children.length > 0 ? (
+    <details open class="typora-tree-details">
+      <summary class="typora-tree-summary">
+        <span class="typora-tree-caret">▶</span>
+        {node.slug ? (
+          <a class="typora-tree-link" href={href}>{node.name}</a>
+        ) : (
+          <span class="typora-tree-label">{node.name}</span>
+        )}
+      </summary>
+      <div class="typora-tree-children">
+        {node.children.map((child) => (
+          <Astro.self node={child} currentSlug={currentSlug} depth={depth + 1} />
+        ))}
+      </div>
+    </details>
+  ) : (
+    <a class:list={["typora-tree-leaf", isActive ? "is-active" : ""]} href={href}>
+      {node.name}
+    </a>
+  )}
+</div>
+
+<style>
+  .typora-tree-row {
+    padding-left: calc(var(--depth) * 12px);
+  }
+  .typora-tree-details > summary::-webkit-details-marker {
+    display: none;
+  }
+  .typora-tree-details[open] .typora-tree-caret {
+    transform: rotate(90deg);
+  }
+  .typora-tree-summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    color: #374151;
+  }
+  .typora-tree-summary:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+  .typora-tree-caret {
+    font-size: 10px;
+    color: #9ca3af;
+    transform-origin: center;
+    transition: transform 120ms ease;
+  }
+  .typora-tree-link,
+  .typora-tree-leaf {
+    display: block;
+    padding: 6px 8px;
+    border-radius: 6px;
+    color: #374151;
+    text-decoration: none;
+  }
+  .typora-tree-link:hover,
+  .typora-tree-leaf:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+  .typora-tree-leaf.is-active {
+    background: rgba(37, 99, 235, 0.10);
+    color: #1d4ed8;
+    font-weight: 600;
+  }
+</style>

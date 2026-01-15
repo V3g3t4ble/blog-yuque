@@ -1,0 +1,256 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  posts: CollectionEntry<'posts'>[];
+}
+
+const { posts } = Astro.props;
+const BASE_URL = import.meta.env.BASE_URL;
+
+const searchIndex = posts.map((post) => ({
+  title: post.data.title,
+  description: post.data.description || '',
+  slug: post.id,
+}));
+---
+
+<div id="typora-search-root" class="typora-search">
+  <button id="typora-search-open" class="typora-search-icon" type="button" aria-label="Search">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  </button>
+
+  <div id="typora-search-panel" class="typora-search-panel hidden">
+    <div class="typora-search-row">
+      <button id="typora-search-close" class="typora-search-back" type="button" aria-label="Back">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <input id="typora-search-input" class="typora-search-input" type="text" placeholder="查找" autocomplete="off" />
+    </div>
+
+    <div id="typora-search-results" class="typora-search-results hidden">
+      <ul id="typora-results-list" class="typora-results-list"></ul>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ searchIndex, BASE_URL }}>
+  const openBtn = document.getElementById('typora-search-open');
+  const panel = document.getElementById('typora-search-panel');
+  const closeBtn = document.getElementById('typora-search-close');
+  const input = document.getElementById('typora-search-input');
+  const results = document.getElementById('typora-search-results');
+  const list = document.getElementById('typora-results-list');
+  const fileTreeContainer = document.getElementById('typora-filetree-container');
+  const outlineContainer = document.getElementById('typora-outline-container');
+  const sidebarBody = document.getElementById('typora-sidebar-body');
+  const header = document.getElementById('typora-sidebar-header');
+  const root = document.getElementById('typora-search-root');
+
+  const getBasePath = () => (BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`);
+
+  const open = () => {
+    panel?.classList.remove('hidden');
+    root?.classList.add('is-open');
+    header?.classList.add('is-searching');
+    setTimeout(() => {
+      if (input instanceof HTMLInputElement) input.focus();
+    }, 10);
+  };
+
+  const close = () => {
+    if (input instanceof HTMLInputElement) input.value = '';
+    results?.classList.add('hidden');
+    if (list) list.innerHTML = '';
+    panel?.classList.add('hidden');
+    const view = sidebarBody?.dataset.view || 'tree';
+    if (view === 'outline') {
+      fileTreeContainer?.classList.add('hidden');
+      outlineContainer?.classList.remove('hidden');
+    } else {
+      outlineContainer?.classList.add('hidden');
+      fileTreeContainer?.classList.remove('hidden');
+    }
+    root?.classList.remove('is-open');
+    header?.classList.remove('is-searching');
+  };
+
+  const render = (query) => {
+    if (!list || !results) return;
+    const q = query.trim().toLowerCase();
+    if (!q) {
+      results.classList.add('hidden');
+      list.innerHTML = '';
+      const view = sidebarBody?.dataset.view || 'tree';
+      if (view === 'outline') {
+        fileTreeContainer?.classList.add('hidden');
+        outlineContainer?.classList.remove('hidden');
+      } else {
+        outlineContainer?.classList.add('hidden');
+        fileTreeContainer?.classList.remove('hidden');
+      }
+      return;
+    }
+
+    fileTreeContainer?.classList.add('hidden');
+    outlineContainer?.classList.add('hidden');
+    const matched = searchIndex.filter((item) => {
+      const t = (item.title || '').toLowerCase();
+      const d = (item.description || '').toLowerCase();
+      const s = (item.slug || '').toLowerCase();
+      return t.includes(q) || d.includes(q) || s.includes(q);
+    });
+
+    results.classList.remove('hidden');
+    list.innerHTML = '';
+
+    if (matched.length === 0) {
+      list.innerHTML = '<li class="typora-empty">无匹配结果</li>';
+      return;
+    }
+
+    const base = getBasePath();
+    matched.slice(0, 50).forEach((item) => {
+      const li = document.createElement('li');
+      const href = `${base}posts/${item.slug}`.replace(/\/+/g, '/');
+      li.innerHTML = `
+        <a class="typora-result" href="${href}">
+          <div class="t">${item.title || item.slug}</div>
+          ${item.description ? `<div class="d">${item.description}</div>` : ''}
+        </a>
+      `;
+      list.appendChild(li);
+    });
+  };
+
+  openBtn?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+
+  if (input instanceof HTMLInputElement) {
+    input.addEventListener('input', (e) => {
+      const target = e.target;
+      if (target instanceof HTMLInputElement) render(target.value);
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close();
+    });
+  }
+</script>
+
+<style>
+  .typora-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .typora-search-icon {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.75);
+    color: #6b7280;
+    cursor: pointer;
+  }
+  .typora-search-icon:hover {
+    color: #111827;
+    background: rgba(255, 255, 255, 1);
+  }
+  .typora-search.is-open .typora-search-icon {
+    display: none;
+  }
+  .typora-search-panel.hidden {
+    display: none;
+  }
+  .typora-search-panel {
+    width: 100%;
+  }
+  .typora-search-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .typora-search-back {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    background: #ffffff;
+    color: #6b7280;
+    cursor: pointer;
+  }
+  .typora-search-back:hover {
+    color: #111827;
+  }
+  .typora-search-input {
+    flex: 1;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    padding: 0 12px;
+    font-size: 14px;
+    outline: none;
+    color: #111827;
+    background: #ffffff;
+  }
+  .typora-search-input:focus {
+    border-color: rgba(37, 99, 235, 0.55);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+  .typora-search-results.hidden {
+    display: none;
+  }
+  .typora-search-results {
+    margin-top: 10px;
+  }
+  .typora-results-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .typora-empty {
+    padding: 10px 10px;
+    color: #6b7280;
+    font-size: 13px;
+  }
+  .typora-result {
+    display: block;
+    padding: 10px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+  }
+  .typora-result:hover {
+    border-color: rgba(37, 99, 235, 0.22);
+    background: #ffffff;
+  }
+  .typora-result .t {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+  }
+  .typora-result .d {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #6b7280;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+</style>

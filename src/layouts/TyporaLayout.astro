@@ -1,0 +1,293 @@
+---
+import { getCollection } from 'astro:content';
+import { buildFileTree } from '../utils/fileTree';
+import { SiteConfig } from '../config';
+import TyporaLoginGate from '../themes/typora/TyporaLoginGate.astro';
+import TyporaFileTree from '../themes/typora/TyporaFileTree.astro';
+import TyporaSearch from '../themes/typora/TyporaSearch.astro';
+import TyporaOutline from '../themes/typora/TyporaOutline.astro';
+
+interface Props {
+  title: string;
+  currentSlug?: string;
+}
+
+const { title, currentSlug } = Astro.props;
+
+const posts = await getCollection('posts');
+const tree = buildFileTree(posts);
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} | {SiteConfig.title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style is:global>
+      :root { font-family: 'Inter', system-ui, sans-serif; }
+      code, pre { font-family: 'JetBrains Mono', monospace; }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d4d4d8; /* zinc-300 */
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #a1a1aa; /* zinc-400 */
+      }
+
+      body.theme-typora {
+        background: #ffffff;
+        color: #111827;
+      }
+
+      .typora-shell {
+        height: 100vh;
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        overflow: hidden;
+      }
+
+      .typora-sidebar {
+        background: #f7f7f8;
+        border-right: 1px solid rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .typora-sidebar-header {
+        height: 44px;
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        font-weight: 600;
+        color: #111827;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(8px);
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .typora-sidebar-header.is-searching {
+        height: auto;
+        padding: 10px 10px;
+        align-items: stretch;
+      }
+      .typora-sidebar-header.is-searching .typora-sidebar-title {
+        display: none;
+      }
+      .typora-sidebar-header.is-searching .typora-sidebar-tabs {
+        display: none;
+      }
+
+      .typora-sidebar-body {
+        flex: 1;
+        overflow: auto;
+      }
+      .typora-sidebar-body .hidden {
+        display: none;
+      }
+
+      .typora-sidebar-tabs {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .typora-tab-btn {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        background: rgba(255, 255, 255, 0.75);
+        color: #6b7280;
+        cursor: pointer;
+      }
+      .typora-tab-btn:hover {
+        color: #111827;
+        background: rgba(255, 255, 255, 1);
+      }
+      .typora-tab-btn.is-active {
+        color: #1d4ed8;
+        border-color: rgba(37, 99, 235, 0.25);
+        background: rgba(37, 99, 235, 0.08);
+      }
+
+      .typora-main {
+        overflow: auto;
+        background: #ffffff;
+      }
+
+      .typora-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 56px 56px 96px;
+      }
+
+      .typora-title {
+        font-size: 34px;
+        line-height: 1.15;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #111827;
+        margin: 0 0 28px;
+      }
+
+      .typora-prose {
+        font-size: 16px;
+        line-height: 1.85;
+        color: #1f2937;
+        word-break: break-word;
+      }
+      .typora-prose h1,
+      .typora-prose h2,
+      .typora-prose h3,
+      .typora-prose h4 {
+        color: #111827;
+        font-weight: 700;
+        line-height: 1.25;
+        margin-top: 1.6em;
+        margin-bottom: 0.6em;
+      }
+      .typora-prose p {
+        margin: 0.9em 0;
+      }
+      .typora-prose a {
+        color: #2563eb;
+        text-decoration: none;
+      }
+      .typora-prose a:hover {
+        text-decoration: underline;
+      }
+      .typora-prose blockquote {
+        margin: 1.1em 0;
+        padding: 0.2em 0 0.2em 1em;
+        border-left: 4px solid rgba(0, 0, 0, 0.14);
+        color: #6b7280;
+        background: transparent;
+      }
+      .typora-prose pre {
+        margin: 1.1em 0;
+        padding: 14px 16px;
+        background: #f3f4f6;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+        overflow: auto;
+        color: #111827;
+      }
+      .typora-prose code {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.92em;
+      }
+      .typora-prose :not(pre) > code {
+        background: #f3f4f6;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 6px;
+        padding: 0.15em 0.35em;
+        color: #db2777;
+      }
+      .typora-prose table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.1em 0;
+        font-size: 0.95em;
+      }
+      .typora-prose th,
+      .typora-prose td {
+        border: 1px solid rgba(0, 0, 0, 0.10);
+        padding: 8px 10px;
+        text-align: left;
+      }
+      .typora-prose thead th {
+        background: #f9fafb;
+      }
+    </style>
+  </head>
+  <body class="theme-typora selection:bg-blue-100 selection:text-blue-900">
+    <TyporaLoginGate>
+      <div class="typora-shell">
+        <aside class="typora-sidebar">
+          <div id="typora-sidebar-header" class="typora-sidebar-header">
+            <div class="typora-sidebar-tabs">
+              <button id="typora-tab-tree" class="typora-tab-btn is-active" type="button" aria-label="文件树">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path>
+                </svg>
+              </button>
+              <button id="typora-tab-outline" class="typora-tab-btn" type="button" aria-label="大纲">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6"></line>
+                  <line x1="8" y1="12" x2="21" y2="12"></line>
+                  <line x1="8" y1="18" x2="21" y2="18"></line>
+                  <circle cx="4" cy="6" r="1"></circle>
+                  <circle cx="4" cy="12" r="1"></circle>
+                  <circle cx="4" cy="18" r="1"></circle>
+                </svg>
+              </button>
+            </div>
+            <div class="typora-sidebar-title">文章</div>
+            <TyporaSearch posts={posts} />
+          </div>
+          <div id="typora-sidebar-body" class="typora-sidebar-body" data-view="tree">
+            <div id="typora-filetree-container">
+              <TyporaFileTree tree={tree} currentSlug={currentSlug} />
+            </div>
+            <div id="typora-outline-container" class="hidden">
+              <TyporaOutline />
+            </div>
+          </div>
+        </aside>
+        <main class="typora-main">
+          <div class="typora-container">
+            <h1 class="typora-title">{title}</h1>
+            <article class="typora-prose">
+              <slot />
+            </article>
+          </div>
+        </main>
+      </div>
+    </TyporaLoginGate>
+  </body>
+</html>
+
+<script>
+  const sidebarBody = document.getElementById('typora-sidebar-body');
+  const treeTab = document.getElementById('typora-tab-tree');
+  const outlineTab = document.getElementById('typora-tab-outline');
+  const tree = document.getElementById('typora-filetree-container');
+  const outline = document.getElementById('typora-outline-container');
+
+  const setView = (view: 'tree' | 'outline') => {
+    if (!sidebarBody || !tree || !outline) return;
+    sidebarBody.dataset.view = view;
+    if (view === 'outline') {
+      tree.classList.add('hidden');
+      outline.classList.remove('hidden');
+      treeTab?.classList.remove('is-active');
+      outlineTab?.classList.add('is-active');
+    } else {
+      outline.classList.add('hidden');
+      tree.classList.remove('hidden');
+      outlineTab?.classList.remove('is-active');
+      treeTab?.classList.add('is-active');
+    }
+  };
+
+  treeTab?.addEventListener('click', () => setView('tree'));
+  outlineTab?.addEventListener('click', () => setView('outline'));
+</script>

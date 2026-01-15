@@ -1,8 +1,10 @@
 ---
 import { getCollection } from 'astro:content';
-import TerminalLayout from '../../layouts/TerminalLayout.astro';
+import Layout from '../../layouts/Layout.astro';
 import { getPostDate } from '../../utils/date';
 import EncryptedPost from '../../components/EncryptedPost.astro';
+import TyporaPost from '../../themes/typora/TyporaPost.astro';
+import { SiteConfig } from '../../config';
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts');
@@ -12,16 +14,19 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-// Use entry.body directly for encryption instead of rendering it
-// const { Content } = await entry.render(); 
 const postDate = getPostDate(entry);
 ---
 
-<TerminalLayout title={entry.data.title} currentSlug={entry.id}>
-  <h1># {entry.data.title}</h1>
-  <div class="text-zinc-500 mb-8 text-sm font-mono border-b border-zinc-800 pb-4">
-    <span class="mr-4">Date: {postDate.toISOString().split('T')[0]}</span>
-  </div>
-  
-  <EncryptedPost content={entry.body} />
-</TerminalLayout>
+<Layout title={entry.data.title} currentSlug={entry.id}>
+  {SiteConfig.theme === 'typora' ? (
+    <TyporaPost content={entry.body} />
+  ) : (
+    <>
+      <h1># {entry.data.title}</h1>
+      <div class="text-zinc-500 mb-8 text-sm font-mono border-b border-zinc-800 pb-4">
+        <span class="mr-4">Date: {postDate.toISOString().split('T')[0]}</span>
+      </div>
+      <EncryptedPost content={entry.body} />
+    </>
+  )}
+</Layout>

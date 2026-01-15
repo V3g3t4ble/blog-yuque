@@ -1,0 +1,112 @@
+<div class="typora-outline">
+  <div id="typora-outline-empty" class="typora-outline-empty hidden">当前文章没有可用大纲</div>
+  <ul id="typora-outline-list" class="typora-outline-list"></ul>
+</div>
+
+<script>
+  const slugify = (text) => {
+    return String(text)
+      .trim()
+      .toLowerCase()
+      .replace(/<\/?[^>]+>/g, '')
+      .replace(/[^\p{L}\p{N}\s-]/gu, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') || `h-${Math.random().toString(16).slice(2)}`;
+  };
+
+  const build = () => {
+    const container = document.querySelector('article.typora-prose');
+    const list = document.getElementById('typora-outline-list');
+    const empty = document.getElementById('typora-outline-empty');
+    if (!container || !list || !empty) return;
+
+    list.innerHTML = '';
+
+    const headings = Array.from(container.querySelectorAll('h1, h2, h3, h4'));
+    if (headings.length === 0) {
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+
+    const used = new Set();
+    headings.forEach((h) => {
+      if (!(h instanceof HTMLElement)) return;
+      let id = h.id;
+      if (!id) {
+        const base = slugify(h.textContent || '');
+        id = base;
+        let i = 2;
+        while (used.has(id) || document.getElementById(id)) {
+          id = `${base}-${i++}`;
+        }
+        h.id = id;
+      }
+      used.add(id);
+
+      const level = Number(h.tagName.slice(1)) || 1;
+      const li = document.createElement('li');
+      li.className = `typora-outline-item level-${level}`;
+      li.innerHTML = `<a class="typora-outline-link" href="#${id}">${h.textContent || ''}</a>`;
+      list.appendChild(li);
+    });
+
+    list.querySelectorAll('a').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const href = a.getAttribute('href') || '';
+        const id = href.startsWith('#') ? href.slice(1) : '';
+        const target = id ? document.getElementById(id) : null;
+        if (!target) return;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', `#${id}`);
+      });
+    });
+  };
+
+  build();
+  document.addEventListener('astro:page-load', build as any);
+</script>
+
+<style>
+  .typora-outline {
+    padding: 10px 10px 14px;
+  }
+  .typora-outline-empty {
+    padding: 10px 10px;
+    color: #6b7280;
+    font-size: 13px;
+  }
+  .typora-outline-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .typora-outline-item {
+    border-radius: 8px;
+  }
+  .typora-outline-link {
+    display: block;
+    padding: 6px 8px;
+    border-radius: 8px;
+    color: #374151;
+    text-decoration: none;
+    font-size: 13px;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .typora-outline-link:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: #111827;
+  }
+  .typora-outline-item.level-2 .typora-outline-link { padding-left: 18px; }
+  .typora-outline-item.level-3 .typora-outline-link { padding-left: 28px; }
+  .typora-outline-item.level-4 .typora-outline-link { padding-left: 38px; }
+</style>
+

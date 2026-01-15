@@ -27,7 +27,7 @@ const passwordHash = isEnabled ? CryptoJS.SHA256(password).toString() : '';
         <div class="bg-zinc-900/50 border border-zinc-800 p-8 rounded shadow-2xl">
           <div class="flex flex-col gap-4">
             <div class="font-bold text-blue-400">
-              {SiteConfig.username}@{SiteConfig.hostname} login:
+              {SiteConfig.terminal.username}@{SiteConfig.terminal.hostname} login:
             </div>
             
             <div class="flex items-center gap-2">

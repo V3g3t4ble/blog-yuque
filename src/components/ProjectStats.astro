@@ -23,9 +23,9 @@ const totalSizeKB = (posts.reduce((acc, post) => acc + post.body.length, 0) / 10
 <div class="mt-8 mb-8 font-mono">
     <div class="flex items-center gap-2 mb-2">
         <span class="text-green-500">➜</span>
-        <span class="text-blue-400">{SiteConfig.prompt.directory}</span>
+        <span class="text-blue-400">{SiteConfig.terminal.prompt.directory}</span>
         <span class="text-gray-400">git:(</span>
-        <span class={SiteConfig.prompt.branchColor}>{SiteConfig.prompt.branch}</span>
+        <span class={SiteConfig.terminal.prompt.branchColor}>{SiteConfig.terminal.prompt.branch}</span>
         <span class="text-gray-400">)</span>
         <span class="text-yellow-400">./scripts/stats.sh</span>
     </div>
@@ -61,7 +61,7 @@ const totalSizeKB = (posts.reduce((acc, post) => acc + post.body.length, 0) / 10
         
         <div class="mt-4 pt-3 border-t border-zinc-800 text-xs text-zinc-600 font-mono">
             <span class="mr-4">Permissions: drwxr-xr-x</span>
-            <span>User: {SiteConfig.username}</span>
+            <span>User: {SiteConfig.terminal.username}</span>
         </div>
     </div>
 </div>
