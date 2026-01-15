@@ -151,6 +151,8 @@ const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
       .typora-login-modal {
         position: relative;
         width: min(420px, calc(100vw - 48px));
+        max-height: calc(100vh - 48px);
+        overflow: auto;
         border-radius: 12px;
         background: #ffffff;
         border: 1px solid rgba(0, 0, 0, 0.08);

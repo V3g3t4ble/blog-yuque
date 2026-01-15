@@ -66,6 +66,7 @@ const tree = buildFileTree(posts);
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        transition: transform 200ms ease;
       }
 
       .typora-sidebar-header {
@@ -224,11 +225,94 @@ const tree = buildFileTree(posts);
       .typora-prose thead th {
         background: #f9fafb;
       }
+
+      .typora-mobile-topbar {
+        display: none;
+      }
+      .typora-mobile-overlay {
+        display: none;
+      }
+
+      @media (max-width: 900px) {
+        .typora-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .typora-sidebar {
+          position: fixed;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          width: min(84vw, 340px);
+          transform: translateX(-110%);
+          z-index: 40;
+          box-shadow: 0 18px 64px rgba(0, 0, 0, 0.18);
+        }
+        .typora-shell.is-sidebar-open .typora-sidebar {
+          transform: translateX(0);
+        }
+
+        .typora-mobile-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 30;
+          background: rgba(17, 24, 39, 0.20);
+          backdrop-filter: blur(2px);
+        }
+        .typora-shell.is-sidebar-open .typora-mobile-overlay {
+          display: block;
+        }
+
+        .typora-mobile-topbar {
+          display: flex;
+          position: sticky;
+          top: 0;
+          z-index: 20;
+          height: 48px;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 0 12px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(10px);
+        }
+        .typora-mobile-topbar-title {
+          font-weight: 700;
+          color: #111827;
+          text-decoration: none;
+        }
+        .typora-mobile-topbar-actions {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .typora-mobile-icon-btn {
+          width: 36px;
+          height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          border: 1px solid rgba(0, 0, 0, 0.10);
+          background: #ffffff;
+          color: #374151;
+        }
+
+        .typora-container {
+          padding: 18px 18px 72px;
+        }
+        .typora-title {
+          font-size: 28px;
+          margin-bottom: 18px;
+        }
+      }
     </style>
   </head>
   <body class="theme-typora selection:bg-blue-100 selection:text-blue-900">
     <TyporaLoginGate>
-      <div class="typora-shell">
+      <div id="typora-shell" class="typora-shell">
+        <div id="typora-mobile-overlay" class="typora-mobile-overlay"></div>
         <aside class="typora-sidebar">
           <div id="typora-sidebar-header" class="typora-sidebar-header">
             <div class="typora-sidebar-tabs">
@@ -261,6 +345,24 @@ const tree = buildFileTree(posts);
           </div>
         </aside>
         <main class="typora-main">
+          <div class="typora-mobile-topbar">
+            <button id="typora-mobile-menu" class="typora-mobile-icon-btn" type="button" aria-label="菜单">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            <a class="typora-mobile-topbar-title" href={import.meta.env.BASE_URL}>文章</a>
+            <div class="typora-mobile-topbar-actions">
+              <button id="typora-mobile-search" class="typora-mobile-icon-btn" type="button" aria-label="搜索">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
           <div class="typora-container">
             <h1 class="typora-title">{title}</h1>
             <article class="typora-prose">
@@ -279,6 +381,10 @@ const tree = buildFileTree(posts);
   const outlineTab = document.getElementById('typora-tab-outline');
   const tree = document.getElementById('typora-filetree-container');
   const outline = document.getElementById('typora-outline-container');
+  const shell = document.getElementById('typora-shell');
+  const overlay = document.getElementById('typora-mobile-overlay');
+  const mobileMenu = document.getElementById('typora-mobile-menu');
+  const mobileSearch = document.getElementById('typora-mobile-search');
 
   const setView = (view: 'tree' | 'outline') => {
     if (!sidebarBody || !tree || !outline) return;
@@ -298,4 +404,35 @@ const tree = buildFileTree(posts);
 
   treeTab?.addEventListener('click', () => setView('tree'));
   outlineTab?.addEventListener('click', () => setView('outline'));
+
+  const setSidebarOpen = (open: boolean) => {
+    if (!shell) return;
+    if (open) shell.classList.add('is-sidebar-open');
+    else shell.classList.remove('is-sidebar-open');
+  };
+
+  mobileMenu?.addEventListener('click', () => {
+    const isOpen = !!shell?.classList.contains('is-sidebar-open');
+    setSidebarOpen(!isOpen);
+  });
+
+  overlay?.addEventListener('click', () => setSidebarOpen(false));
+
+  mobileSearch?.addEventListener('click', () => {
+    setSidebarOpen(true);
+    setTimeout(() => {
+      const btn = document.getElementById('typora-search-open');
+      btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }, 50);
+  });
+
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!(target instanceof Element)) return;
+    if (!shell?.classList.contains('is-sidebar-open')) return;
+    const link = target.closest('aside.typora-sidebar a[href]');
+    if (link) setSidebarOpen(false);
+  });
+
+  document.addEventListener('astro:page-load', () => setSidebarOpen(false) as any);
 </script>
