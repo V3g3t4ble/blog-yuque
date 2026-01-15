@@ -1,7 +1,7 @@
 export const SiteConfig = {
   // Metadata
-  title: 'V3g3t4ble\'s Blog',
-  description: 'A blog about cybersecurity research and development',
+  title: import.meta.env.TITLE,
+  description: import.meta.env.BLOG_PASSWORD.DESCRIPTION,
   
   // Security
   password: import.meta.env.BLOG_PASSWORD,

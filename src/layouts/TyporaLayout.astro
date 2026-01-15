@@ -106,6 +106,14 @@ const tree = buildFileTree(posts);
         align-items: center;
         gap: 6px;
       }
+      .typora-sidebar-title {
+        color: #111827;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .typora-sidebar-title:hover {
+        text-decoration: underline;
+      }
       .typora-tab-btn {
         width: 32px;
         height: 32px;
@@ -240,7 +248,7 @@ const tree = buildFileTree(posts);
                 </svg>
               </button>
             </div>
-            <div class="typora-sidebar-title">文章</div>
+            <a class="typora-sidebar-title" href={import.meta.env.BASE_URL}>文章</a>
             <TyporaSearch posts={posts} />
           </div>
           <div id="typora-sidebar-body" class="typora-sidebar-body" data-view="tree">
