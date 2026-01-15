@@ -9,6 +9,8 @@ interface Props {
 const { password = SiteConfig.password } = Astro.props;
 const isEnabled = !!password;
 const passwordHash = isEnabled ? CryptoJS.SHA256(password).toString() : '';
+const wechatName = SiteConfig.typora?.wechat?.name;
+const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
 ---
 
 {!isEnabled ? (
@@ -27,6 +29,16 @@ const passwordHash = isEnabled ? CryptoJS.SHA256(password).toString() : '';
         <div id="typora-login-error" class="typora-login-error hidden"></div>
 
         <button id="typora-login-btn" class="typora-login-btn" type="button">登录</button>
+
+        <div class="typora-login-help">
+          <div class="typora-login-help-title">关注公众号获取密码</div>
+          <div class="typora-login-help-text">
+            {wechatName ? <>公众号：<span class="typora-login-help-strong">{wechatName}</span></> : '联系作者获取访问密码'}
+          </div>
+          {wechatQrImage ? (
+            <img class="typora-login-help-qr" src={wechatQrImage} alt="公众号二维码" loading="lazy" />
+          ) : null}
+        </div>
       </div>
     </div>
 
@@ -61,7 +73,7 @@ const passwordHash = isEnabled ? CryptoJS.SHA256(password).toString() : '';
         app.classList.remove('hidden');
       };
 
-      const validate = (inputPassword) => {
+      const validate = (inputPassword: string) => {
         const cfg = document.getElementById('typora-auth-config');
         const targetHash = cfg?.dataset.hash;
         if (!targetHash) return false;
@@ -69,7 +81,7 @@ const passwordHash = isEnabled ? CryptoJS.SHA256(password).toString() : '';
         return inputHash === targetHash;
       };
 
-      const setError = (msg) => {
+      const setError = (msg: string) => {
         const el = document.getElementById('typora-login-error');
         if (!el) return;
         el.textContent = msg;
@@ -189,6 +201,36 @@ const passwordHash = isEnabled ? CryptoJS.SHA256(password).toString() : '';
       }
       .typora-login-btn:hover {
         background: #1d4ed8;
+      }
+      .typora-login-help {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      .typora-login-help-title {
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .typora-login-help-text {
+        font-size: 13px;
+        color: #374151;
+      }
+      .typora-login-help-strong {
+        font-weight: 700;
+        color: #111827;
+      }
+      .typora-login-help-qr {
+        margin-top: 10px;
+        width: 160px;
+        height: 160px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        background: #fff;
+        display: block;
       }
     </style>
   </>
