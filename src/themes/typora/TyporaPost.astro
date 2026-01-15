@@ -1,13 +1,12 @@
 ---
-import { marked } from 'marked';
+import { renderMarkdownToHtml } from '../../utils/markdown';
 
 interface Props {
   content: string;
 }
 
 const { content } = Astro.props;
-const html = await marked.parse(content, { breaks: true, gfm: true });
+const html = renderMarkdownToHtml(content);
 ---
 
 <div set:html={html} />
-
