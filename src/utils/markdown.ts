@@ -41,7 +41,8 @@ export function renderMarkdownToHtml(markdown: string): string {
   const renderer = new marked.Renderer();
   renderer.code = ({ text, lang }: any) => {
     const language = (lang || '').trim().split(/\s+/)[0];
-    const result = language
+    const hasLanguage = !!language && !!hljs.getLanguage(language);
+    const result = hasLanguage
       ? hljs.highlight(text, { language, ignoreIllegals: true }).value
       : hljs.highlightAuto(text).value;
     const languageClass = language ? ` language-${language}` : '';

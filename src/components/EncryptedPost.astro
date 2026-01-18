@@ -87,7 +87,8 @@ if (isEnabled) {
             const renderer = new marked.Renderer();
             renderer.code = ({ text, lang }: any) => {
               const language = (lang || '').trim().split(/\s+/)[0];
-              const result = language
+              const hasLanguage = !!language && !!hljs.getLanguage(language);
+              const result = hasLanguage
                 ? hljs.highlight(text, { language, ignoreIllegals: true }).value
                 : hljs.highlightAuto(text).value;
               const languageClass = language ? ` language-${language}` : '';
@@ -104,28 +105,26 @@ if (isEnabled) {
 
                 const encrypted = dataEl.dataset.content;
                 
-                try {
-                    const bytes = CryptoJS.AES.decrypt(encrypted, password);
-                    const decryptedMarkdown = bytes.toString(CryptoJS.enc.Utf8);
-                    
-                    if (decryptedMarkdown) {
-                        // Success
-                        const html = marked.parse(decryptedMarkdown, { renderer, breaks: true, gfm: true }) as string;
-                        target.innerHTML = html;
-                        
-                        container.classList.remove('hidden');
-                        lock.classList.add('hidden');
-                    } else {
-                        throw new Error('Empty decryption result');
-                    }
-                } catch (e) {
-                    console.error('Decryption failed', e);
-                    // Don't show content, maybe show error in lock
+                const bytes = CryptoJS.AES.decrypt(encrypted, password);
+                const decryptedMarkdown = bytes.toString(CryptoJS.enc.Utf8);
+                
+                if (!decryptedMarkdown) {
                     lock.innerHTML += `<div class="text-red-500 mt-2">Decryption Error: Invalid Key</div>`;
-                    
-                    // Dispatch failure event to force logout if key is invalid
                     window.dispatchEvent(new CustomEvent('auth:failed'));
+                    return;
                 }
+
+                try {
+                    const html = marked.parse(decryptedMarkdown, { renderer, breaks: true, gfm: true }) as string;
+                    target.innerHTML = html;
+                } catch (e) {
+                    console.error('Render failed', e);
+                    const fallbackHtml = marked.parse(decryptedMarkdown, { breaks: true, gfm: true }) as string;
+                    target.innerHTML = fallbackHtml;
+                }
+                
+                container.classList.remove('hidden');
+                lock.classList.add('hidden');
             };
 
             // Check if we already have the key

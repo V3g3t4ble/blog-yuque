@@ -1,4 +1,5 @@
 <div class="typora-outline">
+  <div class="typora-outline-header">大纲</div>
   <div id="typora-outline-empty" class="typora-outline-empty hidden">当前文章没有可用大纲</div>
   <ul id="typora-outline-list" class="typora-outline-list"></ul>
 </div>
@@ -47,6 +48,7 @@
 
       const level = Number(h.tagName.slice(1)) || 1;
       const li = document.createElement('li');
+      li.style.setProperty('--level', String(Math.min(4, Math.max(1, level))));
       li.className = `typora-outline-item level-${level}`;
       li.innerHTML = `<a class="typora-outline-link" href="#${id}">${h.textContent || ''}</a>`;
       list.appendChild(li);
@@ -69,9 +71,19 @@
   document.addEventListener('astro:page-load', build as any);
 </script>
 
-<style>
+<style is:global>
   .typora-outline {
     padding: 10px 10px 14px;
+  }
+  .typora-outline-header {
+    padding: 6px 8px 10px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    margin-bottom: 8px;
+    font-weight: 700;
   }
   .typora-outline-empty {
     padding: 10px 10px;
@@ -85,6 +97,16 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    position: relative;
+  }
+  .typora-outline-list::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(0, 0, 0, 0.06);
   }
   .typora-outline-item {
     border-radius: 8px;
@@ -93,20 +115,55 @@
     display: block;
     padding: 6px 8px;
     border-radius: 8px;
-    color: #374151;
+    color: #6b7280;
     text-decoration: none;
     font-size: 13px;
     line-height: 1.35;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    position: relative;
+    padding-left: calc(26px + (var(--level, 1) - 1) * 18px) !important;
   }
   .typora-outline-link:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(0, 0, 0, 0.03);
     color: #111827;
   }
-  .typora-outline-item.level-2 .typora-outline-link { padding-left: 18px; }
-  .typora-outline-item.level-3 .typora-outline-link { padding-left: 28px; }
-  .typora-outline-item.level-4 .typora-outline-link { padding-left: 38px; }
+  .typora-outline-item.level-1 .typora-outline-link { font-weight: 600; color: #4b5563; }
+  .typora-outline-item.level-2 .typora-outline-link { font-weight: 500; color: #6b7280; }
+  .typora-outline-item.level-3 .typora-outline-link { font-weight: 500; color: #6b7280; opacity: 0.92; font-size: 12.5px; }
+  .typora-outline-item.level-4 .typora-outline-link { font-weight: 500; color: #6b7280; opacity: 0.86; font-size: 12px; }
+  .typora-outline-link::before {
+    content: '';
+    position: absolute;
+    left: calc(12px + (var(--level, 1) - 1) * 18px);
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    margin-top: -3px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.10);
+  }
+  .typora-outline-item.level-1 .typora-outline-link::before {
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    background: rgba(0, 0, 0, 0.16);
+  }
+  .typora-outline-item.level-2 .typora-outline-link::after,
+  .typora-outline-item.level-3 .typora-outline-link::after,
+  .typora-outline-item.level-4 .typora-outline-link::after {
+    content: '';
+    position: absolute;
+    left: calc(16px + (var(--level, 1) - 1) * 18px);
+    top: 50%;
+    width: 12px;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.10);
+  }
+  .typora-outline-item.level-2 .typora-outline-link::after,
+  .typora-outline-item.level-3 .typora-outline-link::after,
+  .typora-outline-item.level-4 .typora-outline-link::after {
+    margin-top: 0;
+  }
 </style>
-

@@ -1,0 +1,204 @@
+---
+import { SiteConfig } from '../../config';
+
+const avatar = SiteConfig.typora?.about?.avatar;
+const name = SiteConfig.typora?.about?.name || 'V3g3t4ble\'s Blog';
+const bio =
+  SiteConfig.typora?.about?.bio ||
+  '记录代码审计、漏洞挖掘与安全研究笔记。';
+const tags = SiteConfig.typora?.about?.tags || [];
+
+const website = SiteConfig.typora?.about?.website;
+const github = SiteConfig.typora?.about?.github;
+
+const wechatEnabled = SiteConfig.typora?.wechat?.enabled;
+const wechatName = SiteConfig.typora?.wechat?.name;
+const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
+
+const links = [
+  website ? { label: '主页', href: website } : null,
+  github ? { label: 'GitHub', href: github } : null,
+].filter(Boolean) as Array<{ label: string; href: string }>;
+---
+
+<section class="typora-about">
+  <div class="typora-about-title">关于</div>
+  <div class="typora-about-grid">
+    <div class="typora-about-main">
+      <div class="typora-about-profile">
+        <div class="typora-about-avatar">
+          {avatar ? <img class="typora-about-avatar-img" src={avatar} alt="头像" loading="lazy" /> : null}
+        </div>
+        <div class="typora-about-text">
+          <div class="typora-about-name">{name}</div>
+          <div class="typora-about-bio">{bio}</div>
+          {tags.length > 0 ? (
+            <div class="typora-about-tags" aria-label="标签">
+              {tags.map((t) => (
+                <span class="typora-about-tag">{t}</span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+
+    <div class="typora-about-side">
+      {links.length > 0 ? (
+        <div class="typora-about-links">
+          {links.map((l) => (
+            <a class="typora-about-link" href={l.href} target="_blank" rel="noreferrer">{l.label}</a>
+          ))}
+        </div>
+      ) : null}
+
+      {wechatEnabled && (wechatName || wechatQrImage) ? (
+        <div class="typora-about-wechat">
+          <div class="typora-about-wechat-title">公众号</div>
+          {wechatName ? <div class="typora-about-wechat-name">{wechatName}</div> : null}
+          {wechatQrImage ? (
+            <img class="typora-about-wechat-qr" src={wechatQrImage} alt="公众号二维码" loading="lazy" />
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  </div>
+</section>
+
+<style>
+  .typora-about {
+    margin: 18px 0 24px;
+    padding: 14px 14px 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    background: #fafafa;
+  }
+  .typora-about-title {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .typora-about-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 0.6fr;
+    gap: 12px 14px;
+    align-items: start;
+  }
+  .typora-about-profile {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .typora-about-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    background: radial-gradient(circle at 30% 30%, rgba(37, 99, 235, 0.20), rgba(0, 0, 0, 0.03));
+    overflow: hidden;
+    flex: 0 0 auto;
+  }
+  .typora-about-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .typora-about-text {
+    min-width: 0;
+  }
+  .typora-about-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 6px;
+  }
+  .typora-about-bio {
+    font-size: 13px;
+    line-height: 1.65;
+    color: #4b5563;
+  }
+  .typora-about-tags {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .typora-about-tag {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.70);
+    color: #374151;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .typora-about-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+  .typora-about-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.8);
+    color: #111827;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .typora-about-link:hover {
+    border-color: rgba(37, 99, 235, 0.25);
+    background: #ffffff;
+  }
+  .typora-about-wechat {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  .typora-about-wechat-title {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .typora-about-wechat-name {
+    font-size: 12px;
+    color: #111827;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .typora-about-wechat-qr {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fff;
+  }
+  @media (max-width: 640px) {
+    .typora-about-grid {
+      grid-template-columns: 1fr;
+    }
+    .typora-about-avatar {
+      width: 48px;
+      height: 48px;
+    }
+    .typora-about-wechat-qr {
+      width: 140px;
+      height: 140px;
+    }
+  }
+</style>

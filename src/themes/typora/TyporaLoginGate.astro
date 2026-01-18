@@ -9,6 +9,7 @@ interface Props {
 const { password = SiteConfig.password } = Astro.props;
 const isEnabled = !!password;
 const passwordHash = isEnabled ? CryptoJS.SHA256(password).toString() : '';
+const wechatEnabled = SiteConfig.typora?.wechat?.enabled;
 const wechatName = SiteConfig.typora?.wechat?.name;
 const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
 ---
@@ -30,15 +31,17 @@ const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
 
         <button id="typora-login-btn" class="typora-login-btn" type="button">登录</button>
 
-        <div class="typora-login-help">
-          <div class="typora-login-help-title">关注公众号获取密码</div>
-          <div class="typora-login-help-text">
-            {wechatName ? <>公众号：<span class="typora-login-help-strong">{wechatName}</span></> : '联系作者获取访问密码'}
+        {wechatEnabled ? (
+          <div class="typora-login-help">
+            <div class="typora-login-help-title">关注公众号获取密码</div>
+            <div class="typora-login-help-text">
+              {wechatName ? <>公众号：<span class="typora-login-help-strong">{wechatName}</span></> : '联系作者获取访问密码'}
+            </div>
+            {wechatQrImage ? (
+              <img class="typora-login-help-qr" src={wechatQrImage} alt="公众号二维码" loading="lazy" />
+            ) : null}
           </div>
-          {wechatQrImage ? (
-            <img class="typora-login-help-qr" src={wechatQrImage} alt="公众号二维码" loading="lazy" />
-          ) : null}
-        </div>
+        ) : null}
       </div>
     </div>
 

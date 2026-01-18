@@ -17,12 +17,17 @@ const href = node.slug ? `${base}posts/${node.slug}`.replace(/\/+/g, '/') : '';
   {node.type === 'directory' || node.children.length > 0 ? (
     <details open class="typora-tree-details">
       <summary class="typora-tree-summary">
-        <span class="typora-tree-caret">▶</span>
-        {node.slug ? (
-          <a class="typora-tree-link" href={href}>{node.name}</a>
-        ) : (
-          <span class="typora-tree-label">{node.name}</span>
-        )}
+        <span class="typora-tree-caret" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </span>
+        <span class="typora-tree-icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path>
+          </svg>
+        </span>
+        {node.slug ? <a class="typora-tree-link" href={href}>{node.name}</a> : <span class="typora-tree-label">{node.name}</span>}
       </summary>
       <div class="typora-tree-children">
         {node.children.map((child) => (
@@ -32,6 +37,12 @@ const href = node.slug ? `${base}posts/${node.slug}`.replace(/\/+/g, '/') : '';
     </details>
   ) : (
     <a class:list={["typora-tree-leaf", isActive ? "is-active" : ""]} href={href}>
+      <span class="typora-tree-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+      </span>
       {node.name}
     </a>
   )}
@@ -39,7 +50,7 @@ const href = node.slug ? `${base}posts/${node.slug}`.replace(/\/+/g, '/') : '';
 
 <style>
   .typora-tree-row {
-    padding-left: calc(var(--depth) * 12px);
+    padding-left: calc(var(--depth) * 14px);
   }
   .typora-tree-details > summary::-webkit-details-marker {
     display: none;
@@ -55,32 +66,54 @@ const href = node.slug ? `${base}posts/${node.slug}`.replace(/\/+/g, '/') : '';
     border-radius: 6px;
     cursor: pointer;
     user-select: none;
-    color: #374151;
+    color: #4b5563;
+    font-weight: 500;
+    font-size: 13px;
   }
   .typora-tree-summary:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(0, 0, 0, 0.03);
+    color: #111827;
   }
   .typora-tree-caret {
-    font-size: 10px;
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: #9ca3af;
     transform-origin: center;
     transition: transform 120ms ease;
   }
+  .typora-tree-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    color: #9ca3af;
+  }
   .typora-tree-link,
   .typora-tree-leaf {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     padding: 6px 8px;
     border-radius: 6px;
-    color: #374151;
+    color: #6b7280;
     text-decoration: none;
+    font-weight: 500;
+    font-size: 13px;
   }
   .typora-tree-link:hover,
   .typora-tree-leaf:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(0, 0, 0, 0.03);
+    color: #111827;
   }
   .typora-tree-leaf.is-active {
-    background: rgba(37, 99, 235, 0.10);
-    color: #1d4ed8;
+    background: rgba(0, 0, 0, 0.07);
+    color: #111827;
     font-weight: 600;
+  }
+  .typora-tree-children {
+    margin-left: 18px;
   }
 </style>
