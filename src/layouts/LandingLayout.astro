@@ -1,6 +1,7 @@
 ---
 import { SiteConfig } from '../config';
 import CryptoJS from 'crypto-js';
+import { getCollection } from 'astro:content';
 
 interface Props {
   title: string;
@@ -13,6 +14,23 @@ const hasPassword = !!SiteConfig.password;
 const ctaText = '点击进入';
 const passwordHash = hasPassword ? CryptoJS.SHA256(SiteConfig.password).toString() : '';
 const friendLinks = SiteConfig.friendLinks || [];
+
+const posts = await getCollection('posts');
+const totalPosts = posts.length;
+const safeFormatDate = (date?: Date | null) => (date ? date.toISOString().split('T')[0] : '暂无');
+const createdTimes = posts
+  .map((p) => p.data.date?.getTime())
+  .filter((t): t is number => typeof t === 'number' && Number.isFinite(t));
+const updatedTimes = posts
+  .map((p) => (p.data.updated || p.data.date)?.getTime())
+  .filter((t): t is number => typeof t === 'number' && Number.isFinite(t));
+
+const firstWrittenAt = createdTimes.length ? new Date(Math.min(...createdTimes)) : null;
+const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) : null;
+const writingDays =
+  firstWrittenAt && lastUpdatedAt
+    ? Math.max(1, Math.floor((lastUpdatedAt.getTime() - firstWrittenAt.getTime()) / 86400000) + 1)
+    : 0;
 ---
 
 <!DOCTYPE html>
@@ -158,6 +176,29 @@ const friendLinks = SiteConfig.friendLinks || [];
       }
       html.dark .side-title {
         color: rgba(161, 161, 170, 0.95);
+      }
+      .landing-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px 12px;
+      }
+      .landing-stat .k {
+        font-size: 12px;
+        color: rgba(107, 114, 128, 0.95);
+        margin-bottom: 2px;
+        font-weight: 700;
+      }
+      html.dark .landing-stat .k {
+        color: rgba(161, 161, 170, 0.95);
+      }
+      .landing-stat .v {
+        font-size: 13px;
+        font-weight: 800;
+        color: rgba(17, 24, 39, 0.78);
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+      html.dark .landing-stat .v {
+        color: rgba(229, 231, 235, 0.84);
       }
       .status-item {
         margin-bottom: 10px;
@@ -493,30 +534,31 @@ const friendLinks = SiteConfig.friendLinks || [];
             </div>
 
             <aside class="hero-side" aria-label="侧边栏">
-              <div class="side-card" aria-label="个人状态">
-                <div class="side-title">个人状态</div>
-                <div class="status-item">
-                  <div class="status-row">
-                    <span>大学生活</span>
-                    <span class="status-val">87.5%</span>
+              <div class="side-card" aria-label="文章统计">
+                <div class="side-title">文章统计</div>
+                <div class="landing-stats-grid">
+                  <div class="landing-stat">
+                    <div class="k">文章</div>
+                    <div class="v">{totalPosts}</div>
                   </div>
-                  <div class="status-bar"><div class="status-fill" style="width:87.5%"></div></div>
-                </div>
-                <div class="status-item">
-                  <div class="status-row">
-                    <span>人生</span>
-                    <span class="status-val">25%</span>
+                  <div class="landing-stat">
+                    <div class="k">最近更新</div>
+                    <div class="v">{safeFormatDate(lastUpdatedAt)}</div>
                   </div>
-                  <div class="status-bar"><div class="status-fill" style="width:25%"></div></div>
                 </div>
-                <div class="status-item">
-                  <div class="status-row">
-                    <span>学习进度</span>
-                    <span class="status-val">0%</span>
+              </div>
+              <div class="side-card" aria-label="写作时间">
+                <div class="side-title">写作时间</div>
+                <div class="landing-stats-grid">
+                  <div class="landing-stat">
+                    <div class="k">开始</div>
+                    <div class="v">{safeFormatDate(firstWrittenAt)}</div>
                   </div>
-                  <div class="status-bar"><div class="status-fill" style="width:0%"></div></div>
+                  <div class="landing-stat">
+                    <div class="k">跨度</div>
+                    <div class="v">{writingDays ? `${writingDays} 天` : '暂无'}</div>
+                  </div>
                 </div>
-                <div class="status-ellipsis">...</div>
               </div>
               <div class="side-card links" aria-label="友情链接">
                 <div class="side-title">友情链接</div>

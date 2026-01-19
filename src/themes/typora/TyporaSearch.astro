@@ -55,6 +55,32 @@ const searchIndex = posts.map((post) => ({
 
   const getBasePath = () => (BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`);
 
+  const escapeHtml = (input) =>
+    String(input ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const escapeRegExp = (input) => String(input ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const highlightText = (input, query) => {
+    const text = escapeHtml(input);
+    const q = String(query ?? '').trim();
+    if (!q) return text;
+    const tokens = q
+      .split(/\s+/g)
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .slice(0, 6)
+      .sort((a, b) => b.length - a.length);
+    if (tokens.length === 0) return text;
+    const pattern = tokens.map(escapeRegExp).join('|');
+    const re = new RegExp(`(${pattern})`, 'ig');
+    return text.replace(re, '<mark class="typora-search-hit">$1</mark>');
+  };
+
   const open = () => {
     panel?.classList.remove('hidden');
     root?.classList.add('is-open');
@@ -119,10 +145,12 @@ const searchIndex = posts.map((post) => ({
     matched.slice(0, 50).forEach((item) => {
       const li = document.createElement('li');
       const href = `${base}posts/${item.slug}`.replace(/\/+/g, '/');
+      const titleHtml = highlightText(item.title || item.slug, q);
+      const descHtml = item.description ? highlightText(item.description, q) : '';
       li.innerHTML = `
         <a class="typora-result" href="${href}">
-          <div class="t">${item.title || item.slug}</div>
-          ${item.description ? `<div class="d">${item.description}</div>` : ''}
+          <div class="t">${titleHtml}</div>
+          ${descHtml ? `<div class="d">${descHtml}</div>` : ''}
         </a>
       `;
       list.appendChild(li);
@@ -143,15 +171,15 @@ const searchIndex = posts.map((post) => ({
   }
 </script>
 
-<style>
-  .typora-search {
+<style is:global>
+  #typora-search-root.typora-search {
     position: relative;
     display: flex;
     align-items: center;
   }
-  .typora-search-icon {
-    width: 32px;
-    height: 32px;
+  #typora-search-root .typora-search-icon {
+    width: 30px;
+    height: 30px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -161,96 +189,105 @@ const searchIndex = posts.map((post) => ({
     color: #6b7280;
     cursor: pointer;
   }
-  .typora-search-icon:hover {
+  #typora-search-root .typora-search-icon:hover {
     color: #111827;
     background: rgba(0, 0, 0, 0.05);
   }
-  .typora-search.is-open .typora-search-icon {
+  #typora-search-root.typora-search.is-open .typora-search-icon {
     display: none;
   }
-  .typora-search-panel.hidden {
+  #typora-search-root .typora-search-panel.hidden {
     display: none;
   }
-  .typora-search-panel {
+  #typora-search-root .typora-search-panel {
     width: 100%;
   }
-  .typora-search-row {
+  #typora-search-root .typora-search-row {
     display: flex;
     gap: 8px;
     align-items: center;
   }
-  .typora-search-back {
-    width: 34px;
-    height: 34px;
+  #typora-search-root .typora-search-back {
+    width: 30px;
+    height: 30px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
+    border-radius: 9px;
     border: 1px solid rgba(0, 0, 0, 0.10);
     background: #ffffff;
     color: #6b7280;
     cursor: pointer;
   }
-  .typora-search-back:hover {
+  #typora-search-root .typora-search-back:hover {
     color: #111827;
   }
-  .typora-search-input {
+  #typora-search-root .typora-search-input {
     flex: 1;
-    height: 34px;
-    border-radius: 10px;
+    height: 30px;
+    border-radius: 9px;
     border: 1px solid rgba(0, 0, 0, 0.10);
-    padding: 0 12px;
-    font-size: 14px;
+    padding: 0 10px;
+    font-size: 13px;
     outline: none;
     color: #111827;
     background: #ffffff;
   }
-  .typora-search-input:focus {
+  #typora-search-root .typora-search-input:focus {
     border-color: rgba(37, 99, 235, 0.55);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
-  .typora-search-results.hidden {
+  #typora-search-root .typora-search-results.hidden {
     display: none;
   }
-  .typora-search-results {
+  #typora-search-root .typora-search-results {
     margin-top: 10px;
   }
-  .typora-results-list {
+  #typora-search-root .typora-results-list {
     list-style: none;
     padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 2px;
   }
-  .typora-empty {
+  #typora-search-root .typora-empty {
     padding: 10px 10px;
     color: #6b7280;
     font-size: 13px;
   }
-  .typora-result {
+  #typora-search-root .typora-result {
     display: block;
-    padding: 10px 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    background: rgba(255, 255, 255, 0.8);
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
     text-decoration: none;
   }
-  .typora-result:hover {
-    border-color: rgba(37, 99, 235, 0.22);
-    background: #ffffff;
+  #typora-search-root .typora-result:hover {
+    background: rgba(0, 0, 0, 0.03);
   }
-  .typora-result .t {
+  #typora-search-root .typora-result .t {
     font-size: 13px;
-    font-weight: 600;
-    color: #111827;
+    font-weight: 500;
+    color: #6b7280;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .typora-result .d {
+  #typora-search-root .typora-result .d {
     margin-top: 4px;
     font-size: 12px;
-    color: #6b7280;
+    color: #9ca3af;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+  }
+  #typora-search-root .typora-search-hit {
+    background: rgba(37, 99, 235, 0.14);
+    color: #374151;
+    border-radius: 4px;
+    padding: 0 2px;
   }
 </style>
