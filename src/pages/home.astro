@@ -1,23 +1,10 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { SiteConfig } from '../config';
 import TyporaStats from '../themes/typora/TyporaStats.astro';
 import TyporaAbout from '../themes/typora/TyporaAbout.astro';
 ---
 
 <Layout title="Home">
-  {SiteConfig.theme === 'typora' ? (
-    <>
-      <TyporaAbout />
-      <TyporaStats />
-    </>
-  ) : (
-    <>
-      <h1>README.md</h1>
-      <p>
-        Welcome to my digital garden. Use the file explorer on the left to navigate articles.
-      </p>
-    </>
-  )}
+  <TyporaAbout />
+  <TyporaStats />
 </Layout>
-

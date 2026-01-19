@@ -312,6 +312,7 @@ const tree = buildFileTree(posts);
         border-radius: 10px;
         background: #f3f4f6;
         overflow: hidden;
+        position: relative;
       }
       .typora-codeblock .typora-codeblock-toolbar {
         height: 34px;
@@ -330,6 +331,27 @@ const tree = buildFileTree(posts);
         text-transform: uppercase;
         color: #6b7280;
         user-select: none;
+      }
+      .typora-codeblock .typora-codeblock-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .typora-codeblock .typora-codeblock-toggle {
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        background: rgba(255, 255, 255, 0.8);
+        color: #374151;
+        height: 26px;
+        padding: 0 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .typora-codeblock .typora-codeblock-toggle:hover {
+        border-color: rgba(37, 99, 235, 0.25);
+        background: #ffffff;
+        color: #111827;
       }
       .typora-codeblock .typora-codeblock-copy {
         border: 1px solid rgba(0, 0, 0, 0.08);
@@ -355,6 +377,20 @@ const tree = buildFileTree(posts);
         border: none;
         border-radius: 0;
         background: transparent;
+      }
+      .typora-codeblock.is-collapsed pre {
+        max-height: 260px;
+        overflow: hidden;
+      }
+      .typora-codeblock.is-collapsed::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 54px;
+        background: linear-gradient(to bottom, rgba(243, 244, 246, 0), rgba(243, 244, 246, 0.95));
+        pointer-events: none;
       }
 
       .typora-prose code {
@@ -664,6 +700,15 @@ const tree = buildFileTree(posts);
       lang.className = 'typora-codeblock-lang';
       lang.textContent = getLanguageLabel(codeEl);
 
+      const actions = document.createElement('div');
+      actions.className = 'typora-codeblock-actions';
+
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'typora-codeblock-toggle';
+      toggle.textContent = '展开';
+      toggle.setAttribute('aria-expanded', 'false');
+
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'typora-codeblock-copy';
@@ -682,11 +727,28 @@ const tree = buildFileTree(posts);
       });
 
       toolbar.appendChild(lang);
-      toolbar.appendChild(btn);
+      actions.appendChild(toggle);
+      actions.appendChild(btn);
+      toolbar.appendChild(actions);
 
       pre.parentElement?.insertBefore(wrapper, pre);
       wrapper.appendChild(toolbar);
       wrapper.appendChild(pre);
+
+      const rawText = codeEl.textContent || '';
+      const lines = rawText ? rawText.split('\n').length : 0;
+      const shouldCollapse = lines > 18;
+      if (shouldCollapse) {
+        wrapper.classList.add('is-collapsed');
+      } else {
+        toggle.style.display = 'none';
+      }
+
+      toggle.addEventListener('click', () => {
+        const collapsed = wrapper.classList.toggle('is-collapsed');
+        toggle.textContent = collapsed ? '展开' : '收起';
+        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      });
     });
   };
 

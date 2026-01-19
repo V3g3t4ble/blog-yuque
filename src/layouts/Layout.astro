@@ -1,7 +1,5 @@
 ---
-import { SiteConfig } from '../config';
 import LandingLayout from './LandingLayout.astro';
-import TerminalLayout from './TerminalLayout.astro';
 import TyporaLayout from './TyporaLayout.astro';
 
 interface Props {
@@ -17,7 +15,6 @@ interface Props {
 }
 
 const { title, currentSlug, meta, variant = 'app' } = Astro.props;
-const theme = SiteConfig.theme;
 ---
 
 {
@@ -26,13 +23,7 @@ const theme = SiteConfig.theme;
       <slot />
     </LandingLayout>
   ) :
-  theme === 'typora' ? (
-    <TyporaLayout title={title} currentSlug={currentSlug} meta={meta}>
-      <slot />
-    </TyporaLayout>
-  ) : (
-    <TerminalLayout title={title} currentSlug={currentSlug} meta={meta}>
-      <slot />
-    </TerminalLayout>
-  )
+  <TyporaLayout title={title} currentSlug={currentSlug} meta={meta}>
+    <slot />
+  </TyporaLayout>
 }

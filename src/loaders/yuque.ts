@@ -219,8 +219,9 @@ export function yuqueLoader(): Loader {
         logger.info(`Found ${docsList.length} unique docs (from ${rawDocsList.length} total). Starting download...`);
 
         // 3. Process each doc
+        let loadedCount = 0;
         for (const docInfo of docsList) {
-          if (docInfo.status !== 1) continue; // Skip unpublished
+          if (!docInfo.published_at) continue; // Skip unpublished
 
           // Fetch full content
           const detailResponse = await axios.get(`${BASE_URL}/repos/${namespace}/docs/${docInfo.slug}?raw=1`, {
@@ -283,9 +284,10 @@ export function yuqueLoader(): Loader {
                           // Astro 5 Content Loader puts body in the store.
             }
           });
+          loadedCount += 1;
         }
         
-        logger.info(`Successfully loaded ${docsList.length} docs from Yuque.`);
+        logger.info(`Successfully loaded ${loadedCount} docs from Yuque.`);
 
       } catch (error: any) {
         logger.error(`Yuque Loader Error: ${error.message}`);

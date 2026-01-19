@@ -6,8 +6,6 @@ export const SiteConfig = {
   // Security
   password: import.meta.env.BLOG_PASSWORD,
 
-  theme: import.meta.env.BLOG_THEME || 'terminal',
-
   friendLinks: String(import.meta.env.FRIEND_LINKS || '')
     .split(/[\n,;]+/g)
     .map((s: string) => s.trim())
@@ -38,20 +36,6 @@ export const SiteConfig = {
       enabled: import.meta.env.TYPORA_WECHAT_HINT_ENABLED === 'true',
       name: import.meta.env.TYPORA_WECHAT_NAME,
       qrImage: import.meta.env.TYPORA_WECHAT_QR_IMAGE,
-    },
-  },
-
-  terminal: {
-    username: 'v3g3t4ble',
-    hostname: 'blog',
-    shell: 'zsh',
-    prompt: {
-      directory: '~/blog',
-      branch: 'main',
-      branchColor: 'text-red-400',
-    },
-    fileTree: {
-      rootName: '~/blog',
     },
   },
 };

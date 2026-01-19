@@ -10,14 +10,13 @@ const { title } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const homeHref = `${base}home`;
 const hasPassword = !!SiteConfig.password;
-const theme = SiteConfig.theme;
 const ctaText = '点击进入';
 const passwordHash = hasPassword ? CryptoJS.SHA256(SiteConfig.password).toString() : '';
 const friendLinks = SiteConfig.friendLinks || [];
 ---
 
 <!DOCTYPE html>
-<html lang="zh-CN" class={theme === 'terminal' ? 'dark' : undefined}>
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
