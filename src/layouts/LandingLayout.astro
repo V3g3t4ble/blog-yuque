@@ -18,19 +18,11 @@ const friendLinks = SiteConfig.friendLinks || [];
 const posts = await getCollection('posts');
 const totalPosts = posts.length;
 const safeFormatDate = (date?: Date | null) => (date ? date.toISOString().split('T')[0] : '暂无');
-const createdTimes = posts
-  .map((p) => p.data.date?.getTime())
-  .filter((t): t is number => typeof t === 'number' && Number.isFinite(t));
 const updatedTimes = posts
   .map((p) => (p.data.updated || p.data.date)?.getTime())
   .filter((t): t is number => typeof t === 'number' && Number.isFinite(t));
 
-const firstWrittenAt = createdTimes.length ? new Date(Math.min(...createdTimes)) : null;
 const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) : null;
-const writingDays =
-  firstWrittenAt && lastUpdatedAt
-    ? Math.max(1, Math.floor((lastUpdatedAt.getTime() - firstWrittenAt.getTime()) / 86400000) + 1)
-    : 0;
 ---
 
 <!DOCTYPE html>
@@ -202,6 +194,9 @@ const writingDays =
       }
       .status-item {
         margin-bottom: 10px;
+      }
+      .status-item.last {
+        margin-bottom: 0;
       }
       .status-row {
         display: flex;
@@ -547,17 +542,35 @@ const writingDays =
                   </div>
                 </div>
               </div>
-              <div class="side-card" aria-label="写作时间">
-                <div class="side-title">写作时间</div>
-                <div class="landing-stats-grid">
-                  <div class="landing-stat">
-                    <div class="k">开始</div>
-                    <div class="v">{safeFormatDate(firstWrittenAt)}</div>
+              <div class="side-card" aria-label="个人状态">
+                <div class="side-title">个人状态</div>
+                <div class="status-item">
+                  <div class="status-row">
+                    <span>大学生活</span>
+                    <span class="status-val">87.5%</span>
                   </div>
-                  <div class="landing-stat">
-                    <div class="k">跨度</div>
-                    <div class="v">{writingDays ? `${writingDays} 天` : '暂无'}</div>
+                  <div class="status-bar"><div class="status-fill" style="width:87.5%"></div></div>
+                </div>
+                <div class="status-item">
+                  <div class="status-row">
+                    <span>人生进度</span>
+                    <span class="status-val">25%</span>
                   </div>
+                  <div class="status-bar"><div class="status-fill" style="width:25%"></div></div>
+                </div>
+                <div class="status-item">
+                  <div class="status-row">
+                    <span>学习进度</span>
+                    <span class="status-val">50%</span>
+                  </div>
+                  <div class="status-bar"><div class="status-fill" style="width:50%"></div></div>
+                </div>
+                <div class="status-item last">
+                  <div class="status-row">
+                    <span>恋爱进度</span>
+                    <span class="status-val">100%</span>
+                  </div>
+                  <div class="status-bar"><div class="status-fill" style="width:100%"></div></div>
                 </div>
               </div>
               <div class="side-card links" aria-label="友情链接">
@@ -683,8 +696,8 @@ const writingDays =
       if (el) {
         const safeText = (s: unknown) => (typeof s === 'string' ? s.trim() : '');
 
-        const cacheKey = 'landing_hitokoto_text_v1';
-        const endpoint = 'https://v1.hitokoto.cn/?encode=text';
+        const endpointJson = 'https://v1.hitokoto.cn/?encode=json';
+        const endpointText = 'https://v1.hitokoto.cn/?encode=text';
 
         const render = (text: string) => {
           const value = safeText(text);
@@ -698,33 +711,31 @@ const writingDays =
           el.style.cursor = 'pointer';
         };
 
-        const loadCache = () => {
-          try {
-            const raw = localStorage.getItem(cacheKey);
-            if (!raw) return null;
-            return JSON.parse(raw) as { date?: string; text?: string };
-          } catch {
-            return null;
-          }
-        };
-
-        const saveCache = (date: string, text: string) => {
-          try {
-            localStorage.setItem(cacheKey, JSON.stringify({ date, text }));
-          } catch {}
-        };
-
-        const today = new Date().toISOString().slice(0, 10);
-        const cached = loadCache();
         const loadRemote = async () => {
           const controller = new AbortController();
           const t = window.setTimeout(() => controller.abort(), 8000);
           try {
-            const resp = await fetch(`${endpoint}&_=${Date.now()}`, { signal: controller.signal, cache: 'no-store' });
+            const nonce = Date.now();
+            const resp = await fetch(`${endpointJson}&_=${nonce}`, { signal: controller.signal, cache: 'no-store' });
+            if (!resp.ok) throw new Error(String(resp.status));
+            const json = (await resp.json().catch(() => null)) as any;
+            const text = safeText(json?.hitokoto);
+            if (!render(text)) throw new Error('empty');
+            el.style.cursor = '';
+          } finally {
+            window.clearTimeout(t);
+          }
+        };
+
+        const loadRemoteTextFallback = async () => {
+          const controller = new AbortController();
+          const t = window.setTimeout(() => controller.abort(), 8000);
+          try {
+            const nonce = Date.now();
+            const resp = await fetch(`${endpointText}&_=${nonce}`, { signal: controller.signal, cache: 'no-store' });
             if (!resp.ok) throw new Error(String(resp.status));
             const text = safeText(await resp.text());
             if (!render(text)) throw new Error('empty');
-            saveCache(today, text);
             el.style.cursor = '';
           } finally {
             window.clearTimeout(t);
@@ -735,19 +746,20 @@ const writingDays =
           el.removeEventListener('click', onRetry);
           el.style.cursor = '';
           el.textContent = '加载每日一言...';
-          loadRemote().catch(() => {
-            renderError();
-            el.addEventListener('click', onRetry, { once: true });
-          });
+          loadRemote()
+            .catch(() => loadRemoteTextFallback())
+            .catch(() => {
+              renderError();
+              el.addEventListener('click', onRetry, { once: true });
+            });
         };
 
-        if (cached?.date === today && cached.text && render(cached.text)) {
-        } else {
-          loadRemote().catch(() => {
+        loadRemote()
+          .catch(() => loadRemoteTextFallback())
+          .catch(() => {
             renderError();
             el.addEventListener('click', onRetry, { once: true });
           });
-        }
       }
     </script>
   </body>
