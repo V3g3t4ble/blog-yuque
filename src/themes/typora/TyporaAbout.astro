@@ -67,9 +67,11 @@ const links = [
   .typora-about {
     margin: 18px 0 24px;
     padding: 14px 14px 12px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--lp-border-soft, rgba(0, 0, 0, 0.08));
     border-radius: 12px;
-    background: #fafafa;
+    background: var(--lp-glass-strong, #fafafa);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(12px);
   }
   .typora-about-title {
     font-size: 12px;

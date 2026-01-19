@@ -21,6 +21,7 @@ interface Props {
 
 const { title, currentSlug, meta } = Astro.props;
 const showHomeButton = !!currentSlug;
+const isHome = title === 'Home' && !currentSlug;
 const homeHref = `${import.meta.env.BASE_URL}home`;
 const hasPassword = !!SiteConfig.password;
 
@@ -59,8 +60,22 @@ const tree = buildFileTree(posts);
       }
 
       body.theme-typora {
-        background: #ffffff;
-        color: #111827;
+        --lp-accent-1: #2563eb;
+        --lp-accent-2: #22c55e;
+        --lp-bg: #f5f7ff;
+        --lp-fg: #111827;
+        --lp-muted: rgba(107, 114, 128, 0.95);
+        --lp-border: rgba(0, 0, 0, 0.10);
+        --lp-border-soft: rgba(0, 0, 0, 0.08);
+        --lp-glass: rgba(255, 255, 255, 0.70);
+        --lp-glass-strong: rgba(255, 255, 255, 0.82);
+        --lp-shadow: 0 18px 64px rgba(0, 0, 0, 0.12);
+        background-color: var(--lp-bg);
+        background-image:
+          radial-gradient(1200px circle at 18% 30%, rgba(37, 99, 235, 0.18), transparent 58%),
+          radial-gradient(900px circle at 88% 76%, rgba(34, 197, 94, 0.16), transparent 56%);
+        background-attachment: fixed;
+        color: var(--lp-fg);
         color-scheme: light;
       }
 
@@ -79,12 +94,13 @@ const tree = buildFileTree(posts);
       }
 
       .typora-sidebar {
-        background: #f7f7f8;
-        border-right: 1px solid rgba(0, 0, 0, 0.08);
+        background: var(--lp-glass);
+        border-right: 1px solid var(--lp-border-soft);
         overflow: hidden;
         display: flex;
         flex-direction: column;
         transition: transform 200ms ease;
+        backdrop-filter: blur(12px);
       }
 
       .typora-sidebar-header {
@@ -95,8 +111,8 @@ const tree = buildFileTree(posts);
         font-weight: 600;
         color: #111827;
         border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(8px);
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(12px);
         justify-content: space-between;
         gap: 10px;
       }
@@ -164,13 +180,22 @@ const tree = buildFileTree(posts);
 
       .typora-main {
         overflow: auto;
-        background: #ffffff;
+        background: transparent;
       }
 
       .typora-container {
         max-width: 900px;
         margin: 0 auto;
         padding: 56px 56px 96px;
+      }
+      body.theme-typora[data-page='post'] .typora-container {
+        margin: 32px auto 56px;
+        padding: 44px 44px 72px;
+        border-radius: 18px;
+        border: 1px solid var(--lp-border);
+        background: var(--lp-glass-strong);
+        box-shadow: var(--lp-shadow);
+        backdrop-filter: blur(14px);
       }
 
       .typora-title {
@@ -179,7 +204,7 @@ const tree = buildFileTree(posts);
         font-weight: 700;
         letter-spacing: -0.02em;
         color: #111827;
-        margin: 0 0 28   788888p-0px;
+        margin: 0 0 28px;
       }
       .typora-meta {
         margin: -16px 0 22px;
@@ -200,7 +225,7 @@ const tree = buildFileTree(posts);
         width: 4px;
         height: 4px;
         border-radius: 999px;
-        background: rgba(0, 0, 0, 0.18);
+        background: rgba(37, 99, 235, 0.55);
       }
 
       .typora-prose {
@@ -435,6 +460,11 @@ const tree = buildFileTree(posts);
         .typora-container {
           padding: 18px 18px 72px;
         }
+        body.theme-typora[data-page='post'] .typora-container {
+          margin: 16px 14px 44px;
+          padding: 20px 18px 56px;
+          border-radius: 16px;
+        }
         .typora-title {
           font-size: 28px;
           margin-bottom: 18px;
@@ -442,7 +472,7 @@ const tree = buildFileTree(posts);
       }
     </style>
   </head>
-  <body class="theme-typora selection:bg-blue-100 selection:text-blue-900">
+  <body class="theme-typora selection:bg-blue-100 selection:text-blue-900" data-page={isHome ? 'home' : 'post'}>
     <TyporaLoginGate>
       <div id="typora-shell" class="typora-shell">
         <div id="typora-mobile-overlay" class="typora-mobile-overlay"></div>
@@ -506,7 +536,7 @@ const tree = buildFileTree(posts);
             </div>
           </div>
           <div class="typora-container">
-            <h1 class="typora-title">{title}</h1>
+            {!isHome ? <h1 class="typora-title">{title}</h1> : null}
             {meta?.created || meta?.updated || meta?.words || meta?.readMinutes ? (
               <div class="typora-meta">
                 {meta?.created ? <span class="typora-meta-item">创建：{meta.created}</span> : null}
