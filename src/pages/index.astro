@@ -1,20 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import ProjectStats from '../components/ProjectStats.astro';
-import { SiteConfig } from '../config';
-import TyporaStats from '../themes/typora/TyporaStats.astro';
-import TyporaAbout from '../themes/typora/TyporaAbout.astro';
 ---
 
-<Layout title="Home">
-  {SiteConfig.theme === 'typora' ? (
-    <>
-    <TyporaAbout />
-      <TyporaStats />
-      
-    </>
-  ) : (
-    <>
-    </>
-  )}
-</Layout>
+<Layout title="Welcome" variant="landing" />

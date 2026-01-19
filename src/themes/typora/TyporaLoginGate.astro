@@ -111,8 +111,11 @@ const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
       };
 
       const init = () => {
+        const url = new URL(window.location.href);
+        const forceLogin = url.searchParams.get('login') === '1';
+        if (forceLogin) sessionStorage.removeItem(SESSION_KEY);
         const isAuth = sessionStorage.getItem(SESSION_KEY) === 'true';
-        if (isAuth) showApp();
+        if (isAuth && !forceLogin) showApp();
         else showLogin();
 
         const input = document.getElementById('typora-password');
@@ -126,6 +129,14 @@ const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
         }
         btn?.addEventListener('click', () => attempt());
       };
+
+      window.addEventListener('auth:open', () => {
+        sessionStorage.removeItem(SESSION_KEY);
+        clearError();
+        const input = document.getElementById('typora-password');
+        if (input instanceof HTMLInputElement) input.value = '';
+        showLogin();
+      });
 
       init();
     </script>

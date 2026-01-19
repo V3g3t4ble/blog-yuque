@@ -1,0 +1,713 @@
+---
+import { SiteConfig } from '../config';
+import CryptoJS from 'crypto-js';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const homeHref = `${base}home`;
+const hasPassword = !!SiteConfig.password;
+const theme = SiteConfig.theme;
+const ctaText = '点击进入';
+const passwordHash = hasPassword ? CryptoJS.SHA256(SiteConfig.password).toString() : '';
+const friendLinks = SiteConfig.friendLinks || [];
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN" class={theme === 'terminal' ? 'dark' : undefined}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} | {SiteConfig.title}</title>
+    <meta name="description" content={SiteConfig.description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        font-family: 'Inter', system-ui, sans-serif;
+        color-scheme: light;
+      }
+      html.dark {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        height: 100vh;
+        background: radial-gradient(1200px 700px at 20% 15%, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0)),
+          radial-gradient(1000px 650px at 80% 75%, rgba(34, 197, 94, 0.10), rgba(255, 255, 255, 0)),
+          #ffffff;
+        color: #111827;
+      }
+      html.dark body {
+        background: radial-gradient(1200px 700px at 20% 15%, rgba(37, 99, 235, 0.22), rgba(9, 9, 11, 0)),
+          radial-gradient(1000px 650px at 80% 75%, rgba(34, 197, 94, 0.16), rgba(9, 9, 11, 0)),
+          #09090b;
+        color: #e5e7eb;
+      }
+      a { color: inherit; }
+      .page {
+        height: 100vh;
+        display: flex;
+        align-items: stretch;
+      }
+      .container {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+        padding: clamp(18px, 4vw, 44px);
+        display: flex;
+        align-items: stretch;
+        flex: 1 1 auto;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 0, 0, 0.10);
+        background: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 14px;
+        color: #111827;
+      }
+      html.dark .btn {
+        border-color: rgba(255, 255, 255, 0.14);
+        background: rgba(24, 24, 27, 0.85);
+        color: #f4f4f5;
+      }
+      .btn.primary {
+        border-color: rgba(37, 99, 235, 0.20);
+        background: #2563eb;
+        color: #ffffff;
+      }
+      html.dark .btn.primary {
+        border-color: rgba(37, 99, 235, 0.30);
+      }
+      .btn.cta {
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+      }
+      .btn svg { opacity: 0.9; }
+      .hero {
+        flex: 1 1 auto;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 18px;
+        padding: clamp(22px, 3.5vw, 48px);
+        background: rgba(255, 255, 255, 0.55);
+        backdrop-filter: blur(14px);
+        min-height: calc(100vh - (clamp(18px, 4vw, 44px) * 2));
+        display: flex;
+        align-items: stretch;
+      }
+      html.dark .hero {
+        border-color: rgba(255, 255, 255, 0.10);
+        background: rgba(24, 24, 27, 0.55);
+      }
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1.6fr 0.8fr;
+        gap: 22px;
+        align-items: stretch;
+        width: 100%;
+      }
+      .hero-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .hero-side {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        height: 100%;
+      }
+      .side-card {
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.62);
+        padding: 14px;
+      }
+      html.dark .side-card {
+        border-color: rgba(255, 255, 255, 0.10);
+        background: rgba(9, 9, 11, 0.28);
+      }
+      .side-card.links {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .side-title {
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.10em;
+        text-transform: uppercase;
+        color: rgba(107, 114, 128, 0.95);
+        margin-bottom: 10px;
+        user-select: none;
+      }
+      html.dark .side-title {
+        color: rgba(161, 161, 170, 0.95);
+      }
+      .status-item {
+        margin-bottom: 10px;
+      }
+      .status-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 800;
+        color: rgba(17, 24, 39, 0.78);
+      }
+      html.dark .status-row {
+        color: rgba(229, 231, 235, 0.82);
+      }
+      .status-val {
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+        font-weight: 800;
+        opacity: 0.85;
+      }
+      .status-bar {
+        margin-top: 6px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+      html.dark .status-bar {
+        background: rgba(255, 255, 255, 0.10);
+      }
+      .status-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(37, 99, 235, 0.85), rgba(34, 197, 94, 0.85));
+      }
+      .status-ellipsis {
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        color: rgba(107, 114, 128, 0.95);
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        margin-top: 2px;
+      }
+      html.dark .status-ellipsis {
+        color: rgba(161, 161, 170, 0.95);
+      }
+      .friend-links {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+      }
+      .friend-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 4px 6px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        font-size: 13px;
+        font-weight: 800;
+        color: rgba(17, 24, 39, 0.78);
+        text-decoration: none;
+      }
+      .friend-link::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(17, 24, 39, 0.72);
+        flex: 0 0 auto;
+      }
+      .friend-link:hover {
+        background: rgba(37, 99, 235, 0.08);
+        color: rgba(37, 99, 235, 0.95);
+      }
+      .friend-link:hover::before {
+        background: rgba(37, 99, 235, 0.90);
+      }
+      .friend-link:focus-visible {
+        outline: 4px solid rgba(37, 99, 235, 0.18);
+        outline-offset: 2px;
+      }
+      html.dark .friend-link {
+        background: transparent;
+        color: rgba(229, 231, 235, 0.84);
+      }
+      html.dark .friend-link::before {
+        background: rgba(229, 231, 235, 0.75);
+      }
+      html.dark .friend-link:hover {
+        background: rgba(34, 197, 94, 0.12);
+        color: rgba(255, 255, 255, 0.95);
+      }
+      html.dark .friend-link:hover::before {
+        background: rgba(34, 197, 94, 0.90);
+      }
+      html.dark .friend-link:focus-visible {
+        outline-color: rgba(34, 197, 94, 0.22);
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        margin-bottom: 14px;
+      }
+      .brand-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #2563eb, #22c55e);
+      }
+      .hero-title {
+        font-size: clamp(34px, 4.2vw, 54px);
+        line-height: 1.04;
+        letter-spacing: -0.03em;
+        margin: 0 0 10px;
+        font-weight: 900;
+      }
+      .hero-desc {
+        margin: 0;
+        max-width: 74ch;
+        color: rgba(17, 24, 39, 0.78);
+        line-height: 1.7;
+        font-size: 16px;
+      }
+      .hero-desc .en {
+        display: inline-block;
+        margin-top: 6px;
+        font-size: 0.95em;
+        opacity: 0.78;
+      }
+      html.dark .hero-desc {
+        color: rgba(229, 231, 235, 0.78);
+      }
+      .hero-cta {
+        margin-top: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .hero-features {
+        margin-top: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .hero-chip {
+        display: inline-flex;
+        align-items: center;
+        height: 26px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 0, 0, 0.10);
+        background: rgba(255, 255, 255, 0.75);
+        font-size: 12px;
+        font-weight: 700;
+        color: rgba(17, 24, 39, 0.78);
+        user-select: none;
+      }
+      html.dark .hero-chip {
+        border-color: rgba(255, 255, 255, 0.12);
+        background: rgba(63, 63, 70, 0.25);
+        color: rgba(229, 231, 235, 0.78);
+      }
+      .hero-hint {
+        margin-top: 10px;
+        font-size: 13px;
+        color: rgba(107, 114, 128, 0.95);
+      }
+      html.dark .hero-hint {
+        color: rgba(161, 161, 170, 0.95);
+      }
+      .landing-login.hidden,
+      .landing-login-error.hidden {
+        display: none;
+      }
+      .landing-login {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: grid;
+        place-items: center;
+        font-family: 'Inter', system-ui, sans-serif;
+      }
+      .landing-login-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(17, 24, 39, 0.18);
+        backdrop-filter: blur(10px);
+      }
+      html.dark .landing-login-backdrop {
+        background: rgba(0, 0, 0, 0.35);
+      }
+      .landing-login-modal {
+        position: relative;
+        width: min(520px, calc(100vw - 48px));
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(0, 0, 0, 0.10);
+        box-shadow: 0 18px 64px rgba(0, 0, 0, 0.20);
+        padding: 24px 22px 22px;
+        backdrop-filter: blur(14px);
+      }
+      html.dark .landing-login-modal {
+        background: rgba(24, 24, 27, 0.80);
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+      .landing-login-title {
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        margin: 0 0 6px;
+      }
+      .landing-login-subtitle {
+        margin: 0 0 14px;
+        font-size: 13px;
+        color: rgba(107, 114, 128, 0.95);
+      }
+      html.dark .landing-login-subtitle {
+        color: rgba(161, 161, 170, 0.95);
+      }
+      .landing-login-input {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        padding: 12px 14px;
+        font-size: 14px;
+        outline: none;
+        color: #111827;
+        background: rgba(255, 255, 255, 0.95);
+      }
+      html.dark .landing-login-input {
+        border-color: rgba(255, 255, 255, 0.14);
+        color: #f4f4f5;
+        background: rgba(9, 9, 11, 0.45);
+      }
+      .landing-login-input:focus {
+        border-color: rgba(37, 99, 235, 0.55);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+      }
+      .landing-login-error {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #dc2626;
+      }
+      .landing-login-actions {
+        margin-top: 14px;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+      .landing-login-btn {
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(37, 99, 235, 0.20);
+        background: #2563eb;
+        color: #ffffff;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .landing-login-btn:hover {
+        background: #1d4ed8;
+      }
+      .landing-login-cancel {
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 0, 0, 0.10);
+        background: rgba(255, 255, 255, 0.85);
+        color: rgba(17, 24, 39, 0.78);
+        font-weight: 800;
+        cursor: pointer;
+      }
+      html.dark .landing-login-cancel {
+        border-color: rgba(255, 255, 255, 0.14);
+        background: rgba(63, 63, 70, 0.25);
+        color: rgba(229, 231, 235, 0.82);
+      }
+      @media (max-width: 800px) {
+        .hero { min-height: calc(100vh - 36px); }
+        .hero-grid {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+        .hero-main {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    {hasPassword ? (
+      <div id="landing-auth-config" data-hash={passwordHash} data-home={homeHref} class="hidden"></div>
+    ) : null}
+    <main class="page">
+      <div class="container">
+        <section class="hero">
+          <div class="hero-grid">
+            <div class="hero-main">
+              <a class="brand" href={base} aria-label="回到落地页">
+                <span class="brand-dot"></span>
+                <span>{SiteConfig.title}</span>
+              </a>
+              <h1 class="hero-title">菜鸟成长记录</h1>
+              <p id="landing-daily" class="hero-desc">加载每日一言...</p>
+              <div class="hero-features" aria-label="特性">
+                <span class="hero-chip">代码审计</span>
+                <span class="hero-chip">渗透测试</span>
+                <span class="hero-chip">Captcha The Flag</span>
+                <span class="hero-chip">安全研究</span>
+                <span class="hero-chip">逆向工程</span>
+              </div>
+              <div class="hero-cta">
+                {hasPassword ? (
+                  <button id="landing-enter" class="btn primary cta" type="button" aria-label={ctaText}>
+                    {ctaText}
+                  </button>
+                ) : (
+                  <a class="btn primary cta" href={homeHref} aria-label={ctaText}>
+                    {ctaText}
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <aside class="hero-side" aria-label="侧边栏">
+              <div class="side-card" aria-label="个人状态">
+                <div class="side-title">个人状态</div>
+                <div class="status-item">
+                  <div class="status-row">
+                    <span>大学生活</span>
+                    <span class="status-val">87.5%</span>
+                  </div>
+                  <div class="status-bar"><div class="status-fill" style="width:87.5%"></div></div>
+                </div>
+                <div class="status-item">
+                  <div class="status-row">
+                    <span>人生</span>
+                    <span class="status-val">25%</span>
+                  </div>
+                  <div class="status-bar"><div class="status-fill" style="width:25%"></div></div>
+                </div>
+                <div class="status-item">
+                  <div class="status-row">
+                    <span>学习进度</span>
+                    <span class="status-val">0%</span>
+                  </div>
+                  <div class="status-bar"><div class="status-fill" style="width:0%"></div></div>
+                </div>
+                <div class="status-ellipsis">...</div>
+              </div>
+              <div class="side-card links" aria-label="友情链接">
+                <div class="side-title">友情链接</div>
+                {friendLinks.length > 0 ? (
+                  <div class="friend-links">
+                    {friendLinks.map((l) => (
+                      <a class="friend-link" href={l.href} target="_blank" rel="noreferrer">{l.label}</a>
+                    ))}
+                  </div>
+                ) : (
+                  <div class="hero-desc" style="font-size:13px;opacity:.75">暂无</div>
+                )}
+              </div>
+            </aside>
+          </div>
+          <!-- {hasPassword ? <div class="hero-hint">提示：点击进入后在此页输入密码</div> : null} -->
+        </section>
+      </div>
+    </main>
+
+    {hasPassword ? (
+      <div id="landing-login" class="landing-login hidden" aria-hidden="true">
+        <div id="landing-login-backdrop" class="landing-login-backdrop"></div>
+        <div class="landing-login-modal" role="dialog" aria-modal="true">
+          <div class="landing-login-title">{SiteConfig.title}</div>
+          <div class="landing-login-subtitle">请输入访问密码</div>
+          <input id="landing-password" class="landing-login-input" type="password" autocomplete="off" />
+          <div id="landing-login-error" class="landing-login-error hidden"></div>
+          <div class="landing-login-actions">
+            <button id="landing-login-cancel" class="landing-login-cancel" type="button">取消</button>
+            <button id="landing-login-btn" class="landing-login-btn" type="button">登录</button>
+          </div>
+        </div>
+      </div>
+    ) : null}
+
+    {hasPassword ? (
+      <script>
+        import CryptoJS from 'crypto-js';
+
+        const SESSION_KEY_TYPORA = 'typora_blog_auth';
+        const SESSION_KEY_TERMINAL = 'terminal_blog_auth';
+
+        const login = document.getElementById('landing-login');
+        const backdrop = document.getElementById('landing-login-backdrop');
+        const input = document.getElementById('landing-password');
+        const btn = document.getElementById('landing-login-btn');
+        const cancel = document.getElementById('landing-login-cancel');
+        const errorEl = document.getElementById('landing-login-error');
+        const enterBtn = document.getElementById('landing-enter');
+
+        const isAuthed = () =>
+          sessionStorage.getItem(SESSION_KEY_TYPORA) === 'true' ||
+          sessionStorage.getItem(SESSION_KEY_TERMINAL) === 'true';
+
+        const show = () => {
+          if (!login) return;
+          login.setAttribute('aria-hidden', 'false');
+          login.classList.remove('hidden');
+          if (input instanceof HTMLInputElement) {
+            input.value = '';
+            input.focus();
+          }
+          if (errorEl) {
+            errorEl.textContent = '';
+            errorEl.classList.add('hidden');
+          }
+        };
+
+        const hide = () => {
+          if (!login) return;
+          login.setAttribute('aria-hidden', 'true');
+          login.classList.add('hidden');
+        };
+
+        const validate = (pwd: string) => {
+          const cfg = document.getElementById('landing-auth-config');
+          const targetHash = cfg?.dataset.hash;
+          if (!targetHash) return false;
+          return CryptoJS.SHA256(pwd).toString() === targetHash;
+        };
+
+        const getHomeHref = () => {
+          const cfg = document.getElementById('landing-auth-config');
+          return cfg?.dataset.home || '/home';
+        };
+
+        const attempt = () => {
+          if (!(input instanceof HTMLInputElement)) return;
+          if (!errorEl) return;
+          errorEl.textContent = '';
+          errorEl.classList.add('hidden');
+          const pwd = input.value || '';
+          if (validate(pwd)) {
+            sessionStorage.setItem(SESSION_KEY_TYPORA, 'true');
+            sessionStorage.setItem(SESSION_KEY_TERMINAL, 'true');
+            sessionStorage.setItem('terminal_blog_key', pwd);
+            window.dispatchEvent(new CustomEvent('auth:success', { detail: { password: pwd } }));
+            window.location.href = getHomeHref();
+          } else {
+            errorEl.textContent = '密码错误';
+            errorEl.classList.remove('hidden');
+          }
+        };
+
+        enterBtn?.addEventListener('click', () => {
+          if (isAuthed()) window.location.href = getHomeHref();
+          else show();
+        });
+        btn?.addEventListener('click', attempt);
+        cancel?.addEventListener('click', hide);
+        backdrop?.addEventListener('click', hide);
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') hide();
+          if (e.key === 'Enter' && !(login?.classList.contains('hidden'))) attempt();
+        });
+      </script>
+    ) : null}
+
+    <script>
+      const el = document.getElementById('landing-daily');
+      if (el) {
+        const safeText = (s: unknown) => (typeof s === 'string' ? s.trim() : '');
+
+        const cacheKey = 'landing_hitokoto_text_v1';
+        const endpoint = 'https://v1.hitokoto.cn/?encode=text';
+
+        const render = (text: string) => {
+          const value = safeText(text);
+          if (!value) return false;
+          el.textContent = value;
+          return true;
+        };
+
+        const renderError = () => {
+          el.textContent = '每日一言获取失败，点击重试';
+          el.style.cursor = 'pointer';
+        };
+
+        const loadCache = () => {
+          try {
+            const raw = localStorage.getItem(cacheKey);
+            if (!raw) return null;
+            return JSON.parse(raw) as { date?: string; text?: string };
+          } catch {
+            return null;
+          }
+        };
+
+        const saveCache = (date: string, text: string) => {
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify({ date, text }));
+          } catch {}
+        };
+
+        const today = new Date().toISOString().slice(0, 10);
+        const cached = loadCache();
+        const loadRemote = async () => {
+          const controller = new AbortController();
+          const t = window.setTimeout(() => controller.abort(), 8000);
+          try {
+            const resp = await fetch(`${endpoint}&_=${Date.now()}`, { signal: controller.signal, cache: 'no-store' });
+            if (!resp.ok) throw new Error(String(resp.status));
+            const text = safeText(await resp.text());
+            if (!render(text)) throw new Error('empty');
+            saveCache(today, text);
+            el.style.cursor = '';
+          } finally {
+            window.clearTimeout(t);
+          }
+        };
+
+        const onRetry = () => {
+          el.removeEventListener('click', onRetry);
+          el.style.cursor = '';
+          el.textContent = '加载每日一言...';
+          loadRemote().catch(() => {
+            renderError();
+            el.addEventListener('click', onRetry, { once: true });
+          });
+        };
+
+        if (cached?.date === today && cached.text && render(cached.text)) {
+        } else {
+          loadRemote().catch(() => {
+            renderError();
+            el.addEventListener('click', onRetry, { once: true });
+          });
+        }
+      }
+    </script>
+  </body>
+</html>

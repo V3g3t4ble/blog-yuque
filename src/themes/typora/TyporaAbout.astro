@@ -9,21 +9,20 @@ const bio =
 const tags = SiteConfig.typora?.about?.tags || [];
 
 const website = SiteConfig.typora?.about?.website;
-const github = SiteConfig.typora?.about?.github;
 
 const wechatEnabled = SiteConfig.typora?.wechat?.enabled;
 const wechatName = SiteConfig.typora?.wechat?.name;
 const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
+const showWechat = !!wechatEnabled && (!!wechatName || !!wechatQrImage);
 
 const links = [
   website ? { label: '主页', href: website } : null,
-  github ? { label: 'GitHub', href: github } : null,
 ].filter(Boolean) as Array<{ label: string; href: string }>;
 ---
 
 <section class="typora-about">
   <div class="typora-about-title">关于</div>
-  <div class="typora-about-grid">
+  <div class={`typora-about-grid${showWechat ? '' : ' is-single'}`}>
     <div class="typora-about-main">
       <div class="typora-about-profile">
         <div class="typora-about-avatar">
@@ -39,20 +38,19 @@ const links = [
               ))}
             </div>
           ) : null}
+          {links.length > 0 ? (
+            <div class="typora-about-links" aria-label="链接">
+              {links.map((l) => (
+                <a class="typora-about-link" href={l.href} target="_blank" rel="noreferrer">{l.label}</a>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
 
-    <div class="typora-about-side">
-      {links.length > 0 ? (
-        <div class="typora-about-links">
-          {links.map((l) => (
-            <a class="typora-about-link" href={l.href} target="_blank" rel="noreferrer">{l.label}</a>
-          ))}
-        </div>
-      ) : null}
-
-      {wechatEnabled && (wechatName || wechatQrImage) ? (
+    {showWechat ? (
+      <div class="typora-about-side">
         <div class="typora-about-wechat">
           <div class="typora-about-wechat-title">公众号</div>
           {wechatName ? <div class="typora-about-wechat-name">{wechatName}</div> : null}
@@ -60,8 +58,8 @@ const links = [
             <img class="typora-about-wechat-qr" src={wechatQrImage} alt="公众号二维码" loading="lazy" />
           ) : null}
         </div>
-      ) : null}
-    </div>
+      </div>
+    ) : null}
   </div>
 </section>
 
@@ -86,6 +84,9 @@ const links = [
     grid-template-columns: 1.4fr 0.6fr;
     gap: 12px 14px;
     align-items: start;
+  }
+  .typora-about-grid.is-single {
+    grid-template-columns: 1fr;
   }
   .typora-about-profile {
     display: flex;
@@ -140,6 +141,7 @@ const links = [
     font-weight: 600;
   }
   .typora-about-links {
+    margin-top: 10px;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;

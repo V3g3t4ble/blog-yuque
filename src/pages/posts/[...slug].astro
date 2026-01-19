@@ -15,18 +15,36 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const postDate = getPostDate(entry);
+const countWords = (text: string) => {
+  const cjk = (text.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu) || []).length;
+  const nonCjk = text.replace(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu, ' ');
+  const words = nonCjk.trim().split(/\s+/).filter(Boolean).length;
+  return cjk + words;
+};
+const words = countWords(entry.body || '');
+const readMinutes = Math.max(1, Math.round(words / 300));
+const createdDate = entry.data.date || postDate;
+const updatedDate = entry.data.updated || postDate;
+const meta = {
+  created: createdDate.toISOString().split('T')[0],
+  updated: updatedDate.toISOString().split('T')[0],
+  words,
+  readMinutes,
+};
 ---
 
-<Layout title={entry.data.title} currentSlug={entry.id}>
+<Layout title={entry.data.title} currentSlug={entry.id} meta={meta}>
   {SiteConfig.theme === 'typora' ? (
-    <TyporaPost content={entry.body} />
+    <TyporaPost content={entry.body ?? ''} />
   ) : (
     <>
       <h1># {entry.data.title}</h1>
       <div class="text-zinc-500 mb-8 text-sm font-mono border-b border-zinc-800 pb-4">
-        <span class="mr-4">Date: {postDate.toISOString().split('T')[0]}</span>
+        <span class="mr-4">Created: {meta.created}</span>
+        <span class="mr-4">Updated: {meta.updated}</span>
+        <span class="mr-4">Words: {meta.words}</span>
       </div>
-      <EncryptedPost content={entry.body} />
+      <EncryptedPost content={entry.body ?? ''} />
     </>
   )}
 </Layout>

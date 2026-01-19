@@ -10,9 +10,18 @@ import 'highlight.js/styles/github-dark.css';
 interface Props {
   title: string;
   currentSlug?: string;
+  meta?: {
+    created?: string;
+    updated?: string;
+    words?: number;
+    readMinutes?: number;
+  };
 }
 
 const { title, currentSlug } = Astro.props;
+const baseHref = import.meta.env.BASE_URL;
+const homeHref = `${baseHref}home`;
+const hasPassword = !!SiteConfig.password;
 
 const posts = await getCollection('posts');
 const tree = buildFileTree(posts);
@@ -134,6 +143,56 @@ const tree = buildFileTree(posts);
       /* Protect code blocks from global color overrides */
       .prose pre { color: inherit !important; }
       .prose pre code { color: inherit !important; }
+
+      .terminal-codeblock {
+        margin: 1.2em 0;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 10px;
+        overflow: hidden;
+        background: #0b0b0d;
+      }
+      .terminal-codeblock .terminal-codeblock-toolbar {
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px 0 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(24, 24, 27, 0.80);
+      }
+      .terminal-codeblock .terminal-codeblock-lang {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.10em;
+        text-transform: uppercase;
+        color: #a1a1aa;
+        user-select: none;
+      }
+      .terminal-codeblock .terminal-codeblock-copy {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(63, 63, 70, 0.35);
+        color: #e4e4e7;
+        height: 26px;
+        padding: 0 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .terminal-codeblock .terminal-codeblock-copy:hover {
+        border-color: rgba(34, 197, 94, 0.35);
+        background: rgba(34, 197, 94, 0.12);
+        color: #fff;
+      }
+      .terminal-codeblock pre {
+        margin: 0 !important;
+        background: transparent !important;
+      }
+      .terminal-codeblock pre > code {
+        display: block;
+        padding: 12px 16px 14px;
+        background: transparent !important;
+      }
     </style>
   </head>
   <body class="bg-zinc-950 text-gray-200 font-mono h-screen flex flex-col overflow-hidden selection:bg-green-900 selection:text-green-100">
@@ -146,16 +205,22 @@ const tree = buildFileTree(posts);
           <button id="minimize-sidebar" class="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-400 transition-colors focus:outline-none" aria-label="Minimize sidebar"></button>
           <button id="expand-sidebar" class="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 transition-colors focus:outline-none" aria-label="Expand sidebar"></button>
         </div>
-        <a href="/" class="text-gray-400 flex items-center gap-2 hover:text-gray-300 transition-colors">
+        <a href={homeHref} class="text-gray-400 flex items-center gap-2 hover:text-gray-300 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
           {SiteConfig.terminal.username}@{SiteConfig.terminal.hostname}: {SiteConfig.terminal.prompt.directory}
         </a>
       </div>
       <div class="text-gray-500 flex items-center gap-4">
+        {hasPassword ? (
+          <button id="terminal-logout" class="border border-zinc-700/70 bg-zinc-800/60 hover:bg-zinc-800 text-zinc-200 px-2 py-1 rounded text-[11px] transition-colors" type="button" aria-label="登出">
+            logout
+          </button>
+        ) : null}
         <span class="hidden md:inline">Last login: {new Date().toLocaleDateString()}</span>
         <span class="bg-zinc-800 px-2 py-1 rounded">{SiteConfig.terminal.shell}</span>
       </div>
     </header>
+    <div id="terminal-base" data-base={baseHref} class="hidden"></div>
 
     <div class="flex-1 flex overflow-hidden">
       <!-- Sidebar -->
@@ -213,9 +278,17 @@ const tree = buildFileTree(posts);
       const closeBtn = document.getElementById('close-sidebar');
       const minimizeBtn = document.getElementById('minimize-sidebar');
       const expandBtn = document.getElementById('expand-sidebar');
+      const logoutBtn = document.getElementById('terminal-logout');
+      logoutBtn?.addEventListener('click', () => {
+        sessionStorage.removeItem('typora_blog_auth');
+        sessionStorage.removeItem('terminal_blog_auth');
+        sessionStorage.removeItem('terminal_blog_key');
+        const base = (document.getElementById('terminal-base') as HTMLElement | null)?.dataset.base || '/';
+        window.location.href = base;
+      });
 
       // Helper to toggle sidebar
-      const toggleSidebar = (show) => {
+      const toggleSidebar = (show: boolean) => {
         if (!sidebar) return;
         if (show) {
           sidebar.classList.remove('hidden');
@@ -238,6 +311,77 @@ const tree = buildFileTree(posts);
       // Also allow reopening if user clicks the "expand" button again (though it might be hidden if sidebar is hidden)
       // A better UX might be to have a floating toggle or keep the top bar always visible with buttons.
       // Since the buttons are in the header, they are always visible!
+
+      const getLanguageLabel = (codeEl: Element) => {
+        const cls = codeEl.getAttribute('class') || '';
+        const m = cls.match(/\blanguage-([a-zA-Z0-9_+-]+)\b/);
+        return (m?.[1] || 'code').toLowerCase();
+      };
+
+      const copyText = async (text: string) => {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      };
+
+      const enhanceCodeBlocks = () => {
+        const codes = document.querySelectorAll('article.prose pre > code');
+        codes.forEach((codeEl) => {
+          const pre = codeEl.parentElement;
+          if (!pre) return;
+          if (pre.dataset.enhanced === 'true') return;
+          pre.dataset.enhanced = 'true';
+
+          const wrapper = document.createElement('div');
+          wrapper.className = 'terminal-codeblock';
+
+          const toolbar = document.createElement('div');
+          toolbar.className = 'terminal-codeblock-toolbar';
+
+          const lang = document.createElement('div');
+          lang.className = 'terminal-codeblock-lang';
+          lang.textContent = getLanguageLabel(codeEl);
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'terminal-codeblock-copy';
+          btn.textContent = 'copy';
+
+          btn.addEventListener('click', async () => {
+            const text = codeEl.textContent || '';
+            try {
+              await copyText(text);
+              btn.textContent = 'copied';
+              setTimeout(() => (btn.textContent = 'copy'), 1200);
+            } catch {
+              btn.textContent = 'failed';
+              setTimeout(() => (btn.textContent = 'copy'), 1200);
+            }
+          });
+
+          toolbar.appendChild(lang);
+          toolbar.appendChild(btn);
+
+          pre.parentElement?.insertBefore(wrapper, pre);
+          wrapper.appendChild(toolbar);
+          wrapper.appendChild(pre);
+        });
+      };
+
+      enhanceCodeBlocks();
+      document.addEventListener('astro:page-load', enhanceCodeBlocks);
     </script>
     </LoginGate>
   </body>
