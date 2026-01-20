@@ -1,0 +1,219 @@
+---
+import { getCollection } from 'astro:content';
+import { getPostDate } from '../../utils/date';
+
+const posts = await getCollection('posts');
+
+const toKey = (d: Date) => d.toISOString().slice(0, 10);
+const startOfUtcDay = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+const addDaysUtc = (d: Date, days: number) => {
+  const next = new Date(d);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
+};
+
+const today = startOfUtcDay(new Date());
+const end = today;
+const rangeStart = addDaysUtc(end, -364);
+
+const weekdayIndexMon0 = (d: Date) => (d.getUTCDay() + 6) % 7;
+const startAligned = addDaysUtc(rangeStart, -weekdayIndexMon0(rangeStart));
+const endAligned = addDaysUtc(end, 6 - weekdayIndexMon0(end));
+
+const counts = new Map<string, number>();
+for (const p of posts) {
+  const activityDate = p.data.updated ?? p.data.date ?? getPostDate(p);
+  const key = toKey(activityDate);
+  counts.set(key, (counts.get(key) ?? 0) + 1);
+}
+
+const dates: { key: string; date: Date; count: number }[] = [];
+for (let d = startAligned; d.getTime() <= endAligned.getTime(); d = addDaysUtc(d, 1)) {
+  const key = toKey(d);
+  const count = counts.get(key) ?? 0;
+  dates.push({ key, date: d, count });
+}
+
+const maxCount = dates.reduce((m, x) => Math.max(m, x.count), 0);
+const totalCount = dates.reduce((m, x) => m + x.count, 0);
+const inRange = (d: Date) => d.getTime() >= rangeStart.getTime() && d.getTime() <= end.getTime();
+
+const levelOf = (count: number) => {
+  if (count <= 0) return 0;
+  if (maxCount <= 4) return Math.min(4, count);
+  return Math.max(1, Math.min(4, Math.ceil((count / maxCount) * 4)));
+};
+
+const weeks: { days: typeof dates; label: string }[] = [];
+for (let i = 0; i < dates.length; i += 7) {
+  weeks.push({ days: dates.slice(i, i + 7), label: '' });
+}
+
+for (let w = 0; w < weeks.length; w++) {
+  const first = weeks[w].days[0]?.date;
+  if (!first) continue;
+  const prevFirst = weeks[w - 1]?.days[0]?.date;
+  const month = first.getUTCMonth();
+  const prevMonth = prevFirst ? prevFirst.getUTCMonth() : null;
+  if (prevMonth === null || month !== prevMonth) weeks[w].label = `${month + 1}月`;
+}
+
+const weekdayLabels = [
+  { idx: 0, text: '周一' },
+  { idx: 2, text: '周三' },
+  { idx: 4, text: '周五' },
+];
+
+const monthMarkers: { label: string; weekIndex: number }[] = [];
+for (let i = 0; i < weeks.length; i++) {
+  const label = weeks[i]?.label;
+  if (!label) continue;
+  monthMarkers.push({ label, weekIndex: i });
+}
+
+const cell = 11;
+const gap = 3;
+const labelCol = 42;
+const monthRow = 16;
+const pitch = cell + gap;
+
+const svgWidth = labelCol + weeks.length * cell + Math.max(0, weeks.length - 1) * gap;
+const svgHeight = monthRow + 7 * cell + 6 * gap;
+const xForWeek = (weekIndex: number) => labelCol + weekIndex * pitch;
+const yForDay = (dayIndex: number) => monthRow + dayIndex * pitch;
+---
+
+<section class="typora-contrib" aria-label="贡献记录">
+  <div class="typora-contrib-header">
+    <div class="typora-contrib-title">贡献记录</div>
+    <div class="typora-contrib-subtitle">{totalCount} 次更新（最近 1 年）</div>
+  </div>
+
+  <div class="typora-contrib-body">
+    <svg
+      class="typora-contrib-svg"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+      preserveAspectRatio="xMinYMin meet"
+      role="img"
+      aria-label="最近一年贡献热力图"
+      shape-rendering="crispEdges"
+    >
+      <g class="typora-contrib-svg-months">
+        {monthMarkers.map((m) => (
+          <text class="typora-contrib-label" x={xForWeek(m.weekIndex)} y="12">{m.label}</text>
+        ))}
+      </g>
+
+      <g class="typora-contrib-svg-weekdays">
+        {weekdayLabels.map((w) => (
+          <text class="typora-contrib-label" x="0" y={yForDay(w.idx) + cell - 1}>{w.text}</text>
+        ))}
+      </g>
+
+      <g class="typora-contrib-svg-days">
+        {weeks.map((w, weekIndex) => (
+          <>
+            {w.days.map((d, dayIndex) => {
+              const inside = inRange(d.date);
+              const level = inside ? levelOf(d.count) : 0;
+              const label = inside ? `${d.key}：${d.count} 次更新` : '';
+              return (
+                <rect
+                  class={`typora-contrib-day l${level} ${inside ? '' : 'is-outside'}`}
+                  x={xForWeek(weekIndex)}
+                  y={yForDay(dayIndex)}
+                  width={cell}
+                  height={cell}
+                  rx="3"
+                >
+                  <title>{label}</title>
+                </rect>
+              );
+            })}
+          </>
+        ))}
+      </g>
+    </svg>
+  </div>
+</section>
+
+<style>
+  .typora-contrib {
+    margin: 18px 0 24px;
+    padding: 14px 14px 12px;
+    border: 1px solid var(--lp-border-soft, rgba(0, 0, 0, 0.08));
+    border-radius: 12px;
+    background: var(--lp-glass-strong, #fafafa);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+  }
+  .typora-contrib-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .typora-contrib-title {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-weight: 600;
+  }
+  .typora-contrib-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 600;
+  }
+
+  .typora-contrib-body {
+    width: 100%;
+  }
+
+  .typora-contrib-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .typora-contrib-label {
+    font-size: 11px;
+    fill: rgba(107, 114, 128, 0.95);
+    user-select: none;
+  }
+  .typora-contrib-day {
+    fill: rgba(0, 0, 0, 0.05);
+    stroke: rgba(0, 0, 0, 0.06);
+    stroke-width: 1;
+  }
+  .typora-contrib-day.is-outside {
+    opacity: 0.2;
+  }
+  .typora-contrib-day.l0 { fill: rgba(0, 0, 0, 0.04); }
+  .typora-contrib-day.l1 { fill: rgba(34, 197, 94, 0.22); stroke: rgba(34, 197, 94, 0.22); }
+  .typora-contrib-day.l2 { fill: rgba(34, 197, 94, 0.38); stroke: rgba(34, 197, 94, 0.38); }
+  .typora-contrib-day.l3 { fill: rgba(34, 197, 94, 0.56); stroke: rgba(34, 197, 94, 0.56); }
+  .typora-contrib-day.l4 { fill: rgba(34, 197, 94, 0.78); stroke: rgba(34, 197, 94, 0.78); }
+
+  @media (prefers-color-scheme: dark) {
+    .typora-contrib-subtitle,
+    .typora-contrib-title {
+      color: rgba(161, 161, 170, 0.95);
+    }
+    .typora-contrib-label {
+      fill: rgba(161, 161, 170, 0.95);
+    }
+    .typora-contrib-day {
+      stroke: rgba(255, 255, 255, 0.10);
+      fill: rgba(255, 255, 255, 0.06);
+    }
+    .typora-contrib-day.l0 { fill: rgba(255, 255, 255, 0.06); }
+    .typora-contrib-day.l1 { fill: rgba(34, 197, 94, 0.26); stroke: rgba(34, 197, 94, 0.20); }
+    .typora-contrib-day.l2 { fill: rgba(34, 197, 94, 0.40); stroke: rgba(34, 197, 94, 0.28); }
+    .typora-contrib-day.l3 { fill: rgba(34, 197, 94, 0.58); stroke: rgba(34, 197, 94, 0.38); }
+    .typora-contrib-day.l4 { fill: rgba(34, 197, 94, 0.80); stroke: rgba(34, 197, 94, 0.48); }
+  }
+</style>
