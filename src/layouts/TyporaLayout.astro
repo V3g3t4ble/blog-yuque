@@ -6,6 +6,7 @@ import TyporaLoginGate from '../themes/typora/TyporaLoginGate.astro';
 import TyporaFileTree from '../themes/typora/TyporaFileTree.astro';
 import TyporaSearch from '../themes/typora/TyporaSearch.astro';
 import TyporaOutline from '../themes/typora/TyporaOutline.astro';
+import TyporaGiscus from '../themes/typora/TyporaGiscus.astro';
 import 'highlight.js/styles/github.css';
 
 interface Props {
@@ -39,7 +40,9 @@ const tree = buildFileTree(posts);
     <title>{title} | {SiteConfig.title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap"></noscript>
     <style is:global>
       :root { font-family: 'Inter', system-ui, sans-serif; color-scheme: light; }
       code, pre { font-family: 'JetBrains Mono', monospace; }
@@ -582,8 +585,17 @@ const tree = buildFileTree(posts);
             <article class="typora-prose">
               <slot />
             </article>
+            {!isHome && currentSlug ? <TyporaGiscus /> : null}
           </div>
         </main>
+        <div id="typora-reading-progress" class="typora-reading-progress" aria-hidden="true">
+          <div id="typora-reading-progress-bar" class="typora-reading-progress-bar"></div>
+        </div>
+        <button id="typora-back-top" class="typora-back-top hidden" type="button" aria-label="回到顶部">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+        </button>
       </div>
     </TyporaLoginGate>
   </body>
@@ -600,12 +612,109 @@ const tree = buildFileTree(posts);
   const mobileMenu = document.getElementById('typora-mobile-menu');
   const mobileSearch = document.getElementById('typora-mobile-search');
   const logoutBtn = document.getElementById('typora-logout');
+  const progress = document.getElementById('typora-reading-progress');
+  const progressBar = document.getElementById('typora-reading-progress-bar');
+  const backTop = document.getElementById('typora-back-top');
   logoutBtn?.addEventListener('click', () => {
     sessionStorage.removeItem('typora_blog_auth');
     sessionStorage.removeItem('terminal_blog_auth');
     sessionStorage.removeItem('terminal_blog_key');
     window.location.href = import.meta.env.BASE_URL;
   });
+
+  const escapeRegExp = (input: string) => String(input ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const highlightQueryInArticle = () => {
+    const container = document.querySelector('article.typora-prose');
+    if (!container) return;
+    const url = new URL(window.location.href);
+    const q = (url.searchParams.get('q') || '').trim();
+    if (!q) return;
+    const tokens = q
+      .split(/\s+/g)
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .slice(0, 6)
+      .sort((a, b) => b.length - a.length);
+    if (tokens.length === 0) return;
+
+    container.querySelectorAll('mark.typora-article-hit').forEach((el) => el.replaceWith(document.createTextNode(el.textContent || '')));
+
+    const re = new RegExp(tokens.map(escapeRegExp).join('|'), 'ig');
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const parent = node.parentElement;
+        if (!parent) return NodeFilter.FILTER_REJECT;
+        if (parent.closest('pre, code, script, style, mark')) return NodeFilter.FILTER_REJECT;
+        const text = node.nodeValue || '';
+        if (!text.trim()) return NodeFilter.FILTER_REJECT;
+        if (!re.test(text)) return NodeFilter.FILTER_REJECT;
+        re.lastIndex = 0;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    } as any);
+
+    const nodes: Text[] = [];
+    while (walker.nextNode()) {
+      const n = walker.currentNode;
+      if (n instanceof Text) nodes.push(n);
+    }
+
+    nodes.forEach((node) => {
+      const text = node.nodeValue || '';
+      let last = 0;
+      const frag = document.createDocumentFragment();
+      text.replace(re, (m, _g, offset) => {
+        const idx = Number(offset);
+        if (idx > last) frag.appendChild(document.createTextNode(text.slice(last, idx)));
+        const mark = document.createElement('mark');
+        mark.className = 'typora-article-hit';
+        mark.textContent = m;
+        frag.appendChild(mark);
+        last = idx + m.length;
+        return m;
+      });
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode?.replaceChild(frag, node);
+    });
+
+    const first = container.querySelector('mark.typora-article-hit');
+    if (first instanceof HTMLElement) {
+      setTimeout(() => first.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+    }
+  };
+
+  const setupReadingProgress = () => {
+    const isPost = document.body?.dataset.page === 'post';
+    if (!isPost) {
+      progress?.classList.add('hidden');
+      backTop?.classList.add('hidden');
+      return;
+    }
+    progress?.classList.remove('hidden');
+
+    const scroller = document.querySelector('main.typora-main') as HTMLElement | null;
+    if (!scroller) return;
+
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const max = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
+      const ratio = Math.max(0, Math.min(1, scroller.scrollTop / max));
+      if (progressBar instanceof HTMLElement) progressBar.style.transform = `scaleX(${ratio})`;
+      const show = scroller.scrollTop > 320;
+      backTop?.classList.toggle('hidden', !show);
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    backTop?.addEventListener('click', () => scroller.scrollTo({ top: 0, behavior: 'smooth' }));
+    update();
+  };
 
   const setView = (view: 'tree' | 'outline') => {
     if (!sidebarBody || !tree || !outline) return;
@@ -751,5 +860,86 @@ const tree = buildFileTree(posts);
   };
 
   enhanceCodeBlocks();
+  highlightQueryInArticle();
+  setupReadingProgress();
   document.addEventListener('astro:page-load', enhanceCodeBlocks as any);
+  document.addEventListener('astro:page-load', highlightQueryInArticle as any);
+  document.addEventListener('astro:page-load', setupReadingProgress as any);
 </script>
+
+<style is:global>
+  .typora-icon-btn:focus-visible,
+  .typora-mobile-icon-btn:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline-offset: 2px;
+  }
+  .typora-reading-progress.hidden,
+  #typora-back-top.hidden {
+    display: none;
+  }
+  .typora-reading-progress {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 3px;
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.04);
+    pointer-events: none;
+  }
+  .typora-reading-progress-bar {
+    width: 100%;
+    height: 100%;
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.9), rgba(34, 197, 94, 0.85));
+  }
+  #typora-back-top.typora-back-top {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    color: #374151;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    z-index: 60;
+  }
+  #typora-back-top.typora-back-top:hover {
+    background: rgba(255, 255, 255, 0.95);
+    color: #111827;
+  }
+  #typora-back-top.typora-back-top:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline-offset: 2px;
+  }
+  mark.typora-article-hit {
+    background: rgba(253, 230, 138, 0.85);
+    color: inherit;
+    border-radius: 4px;
+    padding: 0 2px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .typora-reading-progress {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    #typora-back-top.typora-back-top {
+      border-color: rgba(255, 255, 255, 0.14);
+      background: rgba(24, 24, 27, 0.72);
+      color: rgba(229, 231, 235, 0.86);
+    }
+    #typora-back-top.typora-back-top:hover {
+      background: rgba(24, 24, 27, 0.90);
+    }
+    mark.typora-article-hit {
+      background: rgba(245, 158, 11, 0.26);
+    }
+  }
+</style>

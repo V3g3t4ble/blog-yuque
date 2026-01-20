@@ -41,6 +41,18 @@ export function renderMarkdownToHtml(markdown: string): string {
     const languageClass = language ? ` language-${language}` : '';
     return `<pre><code class="hljs${languageClass}">${result}</code></pre>`;
   };
+  renderer.image = ({ href, title, text }: any) => {
+    const escapeAttr = (v: string) =>
+      String(v ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    const src = escapeAttr(href || '');
+    const alt = escapeAttr(text || '');
+    const t = title ? ` title="${escapeAttr(title)}"` : '';
+    return `<img src="${src}" alt="${alt}" loading="lazy" decoding="async"${t} />`;
+  };
   const html = marked.parse(markdown, { renderer, breaks: true, gfm: true }) as string;
   return highlightHtmlCodeBlocks(html);
 }

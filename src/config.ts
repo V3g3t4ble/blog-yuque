@@ -38,4 +38,18 @@ export const SiteConfig = {
       qrImage: import.meta.env.TYPORA_WECHAT_QR_IMAGE,
     },
   },
+  giscus: {
+    enabled: import.meta.env.GISCUS_ENABLED === 'true',
+    repo: import.meta.env.GISCUS_REPO,
+    repoId: import.meta.env.GISCUS_REPO_ID,
+    category: import.meta.env.GISCUS_CATEGORY || 'Announcements',
+    categoryId: import.meta.env.GISCUS_CATEGORY_ID,
+    mapping: import.meta.env.GISCUS_MAPPING || 'pathname',
+    strict: import.meta.env.GISCUS_STRICT || '0',
+    reactionsEnabled: import.meta.env.GISCUS_REACTIONS_ENABLED || '1',
+    emitMetadata: import.meta.env.GISCUS_EMIT_METADATA || '0',
+    inputPosition: import.meta.env.GISCUS_INPUT_POSITION || 'top',
+    theme: import.meta.env.GISCUS_THEME || 'preferred_color_scheme',
+    lang: import.meta.env.GISCUS_LANG || 'zh-CN',
+  },
 };

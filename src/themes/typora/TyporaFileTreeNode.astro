@@ -74,6 +74,12 @@ const href = node.slug ? `${base}posts/${node.slug}`.replace(/\/+/g, '/') : '';
     background: rgba(0, 0, 0, 0.03);
     color: #111827;
   }
+  .typora-tree-summary:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline-offset: 2px;
+    background: rgba(37, 99, 235, 0.08);
+    color: #111827;
+  }
   .typora-tree-caret {
     width: 16px;
     height: 16px;
@@ -106,6 +112,13 @@ const href = node.slug ? `${base}posts/${node.slug}`.replace(/\/+/g, '/') : '';
   .typora-tree-link:hover,
   .typora-tree-leaf:hover {
     background: rgba(0, 0, 0, 0.03);
+    color: #111827;
+  }
+  .typora-tree-link:focus-visible,
+  .typora-tree-leaf:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline-offset: 2px;
+    background: rgba(37, 99, 235, 0.08);
     color: #111827;
   }
   .typora-tree-leaf.is-active {

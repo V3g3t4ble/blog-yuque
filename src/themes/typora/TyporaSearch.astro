@@ -8,34 +8,47 @@ interface Props {
 const { posts } = Astro.props;
 const BASE_URL = import.meta.env.BASE_URL;
 
+const stripMarkdown = (input: string) => {
+  return String(input ?? '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, ' ')
+    .replace(/\[[^\]]*\]\([^)]+\)/g, ' ')
+    .replace(/<\/?[^>]+>/g, ' ')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 const searchIndex = posts.map((post) => ({
   title: post.data.title,
   description: post.data.description || '',
   slug: post.id,
+  text: stripMarkdown(post.body || '').slice(0, 12000),
 }));
 ---
 
 <div id="typora-search-root" class="typora-search">
-  <button id="typora-search-open" class="typora-search-icon" type="button" aria-label="Search">
+  <button id="typora-search-open" class="typora-search-icon" type="button" aria-label="搜索" aria-expanded="false">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="11" cy="11" r="8"></circle>
       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
     </svg>
   </button>
 
-  <div id="typora-search-panel" class="typora-search-panel hidden">
+  <div id="typora-search-panel" class="typora-search-panel hidden" role="dialog" aria-modal="false" aria-label="搜索" aria-hidden="true">
     <div class="typora-search-row">
-      <button id="typora-search-close" class="typora-search-back" type="button" aria-label="Back">
+      <button id="typora-search-close" class="typora-search-back" type="button" aria-label="返回">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"></line>
           <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
       </button>
-      <input id="typora-search-input" class="typora-search-input" type="text" placeholder="查找" autocomplete="off" />
+      <input id="typora-search-input" class="typora-search-input" type="text" placeholder="查找" autocomplete="off" aria-controls="typora-results-list" aria-autocomplete="list" aria-activedescendant="" />
     </div>
 
     <div id="typora-search-results" class="typora-search-results hidden">
-      <ul id="typora-results-list" class="typora-results-list"></ul>
+      <ul id="typora-results-list" class="typora-results-list" role="listbox" aria-label="搜索结果"></ul>
     </div>
   </div>
 </div>
@@ -55,6 +68,14 @@ const searchIndex = posts.map((post) => ({
 
   const getBasePath = () => (BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`);
 
+  const tokenize = (q) =>
+    String(q ?? '')
+      .trim()
+      .split(/\s+/g)
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .slice(0, 6);
+
   const escapeHtml = (input) =>
     String(input ?? '')
       .replace(/&/g, '&amp;')
@@ -69,22 +90,106 @@ const searchIndex = posts.map((post) => ({
     const text = escapeHtml(input);
     const q = String(query ?? '').trim();
     if (!q) return text;
-    const tokens = q
-      .split(/\s+/g)
-      .map((t) => t.trim())
-      .filter(Boolean)
-      .slice(0, 6)
-      .sort((a, b) => b.length - a.length);
+    const tokens = tokenize(q).sort((a, b) => b.length - a.length);
     if (tokens.length === 0) return text;
     const pattern = tokens.map(escapeRegExp).join('|');
     const re = new RegExp(`(${pattern})`, 'ig');
     return text.replace(re, '<mark class="typora-search-hit">$1</mark>');
   };
 
+  const scoreText = (text, tokens) => {
+    const t = String(text ?? '').toLowerCase();
+    if (!t) return 0;
+    let score = 0;
+    for (const tok of tokens) {
+      const needle = tok.toLowerCase();
+      const idx = t.indexOf(needle);
+      if (idx === -1) continue;
+      score += 1;
+      if (idx === 0) score += 1;
+    }
+    return score;
+  };
+
+  const scoreItem = (item, tokens, qLower) => {
+    const title = String(item.title ?? '');
+    const desc = String(item.description ?? '');
+    const slug = String(item.slug ?? '');
+    const text = String(item.text ?? '');
+
+    const titleLower = title.toLowerCase();
+    const descLower = desc.toLowerCase();
+    const slugLower = slug.toLowerCase();
+    const textLower = text.toLowerCase();
+
+    let score = 0;
+    if (titleLower === qLower) score += 60;
+    if (slugLower === qLower) score += 20;
+    if (titleLower.includes(qLower)) score += 18;
+    if (descLower.includes(qLower)) score += 6;
+    if (slugLower.includes(qLower)) score += 4;
+    if (textLower.includes(qLower)) score += 4;
+
+    score += scoreText(titleLower, tokens) * 10;
+    score += scoreText(descLower, tokens) * 3;
+    score += scoreText(slugLower, tokens) * 2;
+    score += scoreText(textLower, tokens) * 1;
+    return score;
+  };
+
+  const buildSnippet = (text, query) => {
+    const raw = String(text ?? '').replace(/\s+/g, ' ').trim();
+    if (!raw) return '';
+    const q = String(query ?? '').trim();
+    const tokens = tokenize(q).sort((a, b) => b.length - a.length);
+    if (tokens.length === 0) return raw.slice(0, 90);
+
+    const lower = raw.toLowerCase();
+    let idx = -1;
+    for (const tok of tokens) {
+      const i = lower.indexOf(tok.toLowerCase());
+      if (i !== -1) {
+        idx = i;
+        break;
+      }
+    }
+    if (idx === -1) return raw.slice(0, 90);
+
+    const maxLen = 96;
+    const start = Math.max(0, idx - 24);
+    const end = Math.min(raw.length, start + maxLen);
+    const prefix = start > 0 ? '…' : '';
+    const suffix = end < raw.length ? '…' : '';
+    return `${prefix}${raw.slice(start, end)}${suffix}`;
+  };
+
+  let activeIndex = -1;
+  const setActive = (idx) => {
+    if (!list || !(input instanceof HTMLInputElement)) return;
+    const items = Array.from(list.querySelectorAll('a.typora-result'));
+    if (items.length === 0) {
+      activeIndex = -1;
+      input.setAttribute('aria-activedescendant', '');
+      return;
+    }
+    const next = Math.max(0, Math.min(items.length - 1, idx));
+    activeIndex = next;
+    items.forEach((el, i) => {
+      el.classList.toggle('is-active', i === activeIndex);
+      el.setAttribute('aria-selected', i === activeIndex ? 'true' : 'false');
+    });
+    const active = items[activeIndex];
+    const id = active?.id || '';
+    input.setAttribute('aria-activedescendant', id);
+    active?.scrollIntoView({ block: 'nearest' });
+  };
+
   const open = () => {
     panel?.classList.remove('hidden');
     root?.classList.add('is-open');
     header?.classList.add('is-searching');
+    openBtn?.setAttribute('aria-expanded', 'true');
+    panel?.setAttribute('aria-hidden', 'false');
     setTimeout(() => {
       if (input instanceof HTMLInputElement) input.focus();
     }, 10);
@@ -95,6 +200,8 @@ const searchIndex = posts.map((post) => ({
     results?.classList.add('hidden');
     if (list) list.innerHTML = '';
     panel?.classList.add('hidden');
+    openBtn?.setAttribute('aria-expanded', 'false');
+    panel?.setAttribute('aria-hidden', 'true');
     const view = sidebarBody?.dataset.view || 'tree';
     if (view === 'outline') {
       fileTreeContainer?.classList.add('hidden');
@@ -105,12 +212,16 @@ const searchIndex = posts.map((post) => ({
     }
     root?.classList.remove('is-open');
     header?.classList.remove('is-searching');
+    activeIndex = -1;
+    if (input instanceof HTMLInputElement) input.setAttribute('aria-activedescendant', '');
   };
 
   const render = (query) => {
     if (!list || !results) return;
-    const q = query.trim().toLowerCase();
-    if (!q) {
+    const rawQuery = String(query ?? '').trim();
+    const q = rawQuery.toLowerCase();
+    const tokens = tokenize(rawQuery);
+    if (!q || tokens.length === 0) {
       results.classList.add('hidden');
       list.innerHTML = '';
       const view = sidebarBody?.dataset.view || 'tree';
@@ -126,15 +237,14 @@ const searchIndex = posts.map((post) => ({
 
     fileTreeContainer?.classList.add('hidden');
     outlineContainer?.classList.add('hidden');
-    const matched = searchIndex.filter((item) => {
-      const t = (item.title || '').toLowerCase();
-      const d = (item.description || '').toLowerCase();
-      const s = (item.slug || '').toLowerCase();
-      return t.includes(q) || d.includes(q) || s.includes(q);
-    });
+    const matched = searchIndex
+      .map((item) => ({ item, score: scoreItem(item, tokens, q) }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => (b.score - a.score) || String(a.item.title ?? '').localeCompare(String(b.item.title ?? ''), 'zh-CN'));
 
     results.classList.remove('hidden');
     list.innerHTML = '';
+    activeIndex = -1;
 
     if (matched.length === 0) {
       list.innerHTML = '<li class="typora-empty">无匹配结果</li>';
@@ -142,23 +252,48 @@ const searchIndex = posts.map((post) => ({
     }
 
     const base = getBasePath();
-    matched.slice(0, 50).forEach((item) => {
+    matched.slice(0, 50).forEach(({ item }, i) => {
       const li = document.createElement('li');
-      const href = `${base}posts/${item.slug}`.replace(/\/+/g, '/');
-      const titleHtml = highlightText(item.title || item.slug, q);
-      const descHtml = item.description ? highlightText(item.description, q) : '';
+      const href = `${base}posts/${item.slug}?q=${encodeURIComponent(rawQuery)}`.replace(/\/+/g, '/');
+      const titleHtml = highlightText(item.title || item.slug, rawQuery);
+      const snippet = buildSnippet(item.description || item.text || item.slug, rawQuery);
+      const descHtml = snippet ? highlightText(snippet, rawQuery) : '';
       li.innerHTML = `
-        <a class="typora-result" href="${href}">
+        <a id="typora-result-${i}" class="typora-result" href="${href}" role="option" aria-selected="false">
           <div class="t">${titleHtml}</div>
           ${descHtml ? `<div class="d">${descHtml}</div>` : ''}
         </a>
       `;
       list.appendChild(li);
     });
+
+    setActive(0);
+    list.querySelectorAll('a.typora-result').forEach((a) => {
+      a.addEventListener('click', () => close());
+      a.addEventListener('mousemove', () => {
+        const id = a.id || '';
+        const m = id.match(/typora-result-(\d+)/);
+        if (!m) return;
+        setActive(Number(m[1]));
+      });
+    });
   };
 
   openBtn?.addEventListener('click', open);
   closeBtn?.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => {
+    const key = e.key;
+    const meta = e.metaKey || e.ctrlKey;
+    if (meta && key.toLowerCase() === 'k') {
+      e.preventDefault();
+      open();
+      return;
+    }
+    if (key === 'Escape' && root?.classList.contains('is-open')) {
+      e.preventDefault();
+      close();
+    }
+  });
 
   if (input instanceof HTMLInputElement) {
     input.addEventListener('input', (e) => {
@@ -167,6 +302,21 @@ const searchIndex = posts.map((post) => ({
     });
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') close();
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActive(activeIndex + 1);
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActive(activeIndex - 1);
+      }
+      if (e.key === 'Enter') {
+        const items = list ? Array.from(list.querySelectorAll('a.typora-result')) : [];
+        const active = activeIndex >= 0 ? items[activeIndex] : null;
+        if (active instanceof HTMLAnchorElement) {
+          active.click();
+        }
+      }
     });
   }
 </script>
@@ -192,6 +342,10 @@ const searchIndex = posts.map((post) => ({
   #typora-search-root .typora-search-icon:hover {
     color: #111827;
     background: rgba(0, 0, 0, 0.05);
+  }
+  #typora-search-root .typora-search-icon:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline-offset: 2px;
   }
   #typora-search-root.typora-search.is-open .typora-search-icon {
     display: none;
@@ -221,6 +375,10 @@ const searchIndex = posts.map((post) => ({
   }
   #typora-search-root .typora-search-back:hover {
     color: #111827;
+  }
+  #typora-search-root .typora-search-back:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline-offset: 2px;
   }
   #typora-search-root .typora-search-input {
     flex: 1;
@@ -266,6 +424,13 @@ const searchIndex = posts.map((post) => ({
   }
   #typora-search-root .typora-result:hover {
     background: rgba(0, 0, 0, 0.03);
+  }
+  #typora-search-root .typora-result.is-active {
+    background: rgba(37, 99, 235, 0.08);
+  }
+  #typora-search-root .typora-result:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline-offset: 2px;
   }
   #typora-search-root .typora-result .t {
     font-size: 13px;

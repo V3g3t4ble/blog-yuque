@@ -1,0 +1,50 @@
+---
+import { SiteConfig } from '../../config';
+
+const cfg = SiteConfig.giscus;
+const enabled =
+  !!cfg?.enabled &&
+  !!cfg.repo &&
+  !!cfg.repoId &&
+  !!cfg.category &&
+  !!cfg.categoryId &&
+  !!cfg.mapping &&
+  !!cfg.theme &&
+  !!cfg.lang;
+---
+
+{enabled ? (
+  <section class="typora-giscus" aria-label="评论">
+    <div class="giscus" />
+    <script
+      src="https://giscus.app/client.js"
+      data-repo={cfg.repo}
+      data-repo-id={cfg.repoId}
+      data-category={cfg.category}
+      data-category-id={cfg.categoryId}
+      data-mapping={cfg.mapping}
+      data-strict={cfg.strict}
+      data-reactions-enabled={cfg.reactionsEnabled}
+      data-emit-metadata={cfg.emitMetadata}
+      data-input-position={cfg.inputPosition}
+      data-theme={cfg.theme}
+      data-lang={cfg.lang}
+      crossorigin="anonymous"
+      async
+    />
+  </section>
+) : null}
+
+<style>
+  .typora-giscus {
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    .typora-giscus {
+      border-top-color: rgba(255, 255, 255, 0.10);
+    }
+  }
+</style>
+
