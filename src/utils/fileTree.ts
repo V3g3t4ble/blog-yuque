@@ -39,14 +39,14 @@ export function buildFileTree(posts: CollectionEntry<'posts'>[]): TreeNode[] {
       // Use post title for file name display if it's a file node
       // Ensure we don't display undefined.md
       const safeTitle = post.data.title || 'Untitled';
-      const displayName = isLast ? `${safeTitle}.md` : part;
+      const displayName = isLast ? `${safeTitle}` : part;
 
       // Try to find existing node matching either the exact part name or the file name (part + .md)
       // This allows merging a directory "Folder" with a file "Folder.md" into a single node
       let existingNode = currentLevel.find((node) => 
           node.name === displayName || 
           node.name === part || 
-          node.name === `${part}.md`
+          node.name === `${part}`
       );
 
       if (!existingNode) {
@@ -71,7 +71,7 @@ export function buildFileTree(posts: CollectionEntry<'posts'>[]): TreeNode[] {
             // Update name to include .md if it was just a directory before?
             // If we want it to look like a file, yes.
             if (!existingNode.name.endsWith('.md')) {
-                existingNode.name = `${existingNode.name}.md`;
+                existingNode.name = `${existingNode.name}`;
             }
         }
       }
