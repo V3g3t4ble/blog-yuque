@@ -3,6 +3,9 @@ import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import { getPostDate } from '../../utils/date';
 import TyporaPost from '../../themes/typora/TyporaPost.astro';
+import { renderMarkdownToHtml } from '../../utils/markdown';
+import { SiteConfig } from '../../config';
+import CryptoJS from 'crypto-js';
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts');
@@ -29,8 +32,13 @@ const meta = {
   words,
   readMinutes,
 };
+
+const isLocked = entry.data.locked === true;
+const encryptedHtml = isLocked && SiteConfig.password
+  ? CryptoJS.AES.encrypt(renderMarkdownToHtml(entry.body ?? ''), SiteConfig.password).toString()
+  : null;
 ---
 
 <Layout title={entry.data.title} currentSlug={entry.id} meta={meta} locked={entry.data.locked}>
-  <TyporaPost content={entry.body ?? ''} />
+  {encryptedHtml ? <TyporaPost encryptedHtml={encryptedHtml} /> : <TyporaPost content={entry.body ?? ''} />}
 </Layout>

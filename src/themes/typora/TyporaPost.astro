@@ -2,11 +2,12 @@
 import { renderMarkdownToHtml } from '../../utils/markdown';
 
 interface Props {
-  content: string;
+  content?: string;
+  encryptedHtml?: string;
 }
 
-const { content } = Astro.props;
-const html = renderMarkdownToHtml(content);
+const { content = '', encryptedHtml } = Astro.props;
+const html = encryptedHtml ? '' : renderMarkdownToHtml(content);
 ---
 
-<div set:html={html} />
+{encryptedHtml ? <div data-typora-aes={encryptedHtml} /> : <div set:html={html} />}
