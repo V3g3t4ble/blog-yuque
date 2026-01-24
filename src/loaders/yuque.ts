@@ -53,6 +53,7 @@ async function downloadImage(url: string, logger: any): Promise<string> {
 
 // Process markdown content to replace images
 async function processContent(content: string, logger: any): Promise<string> {
+  if (!content) return '';
   // Regex to match markdown images: ![alt](url)
   const imgRegex = /!\[(.*?)\]\((.*?)\)/g;
   let newContent = content;
@@ -257,6 +258,8 @@ export function yuqueLoader(): Loader {
           // Use the slug as ID. This allows fileTree.ts to generate the sidebar structure
           // based on the directory-like path we constructed from TOC.
           
+          const isLocked = docInfo.public === 0;
+          
           const data = await parseData({
             id: slug,
             data: {
@@ -265,6 +268,7 @@ export function yuqueLoader(): Loader {
               date: new Date(docInfo.created_at),
               updated: new Date((docInfo as any).updated_at || (detail as any).updated_at || docInfo.created_at),
               sort: sortOrder !== -1 ? sortOrder : 999999, // Store sort order
+              locked: isLocked,
             }
           });
           

@@ -12,9 +12,10 @@ interface Props {
     words?: number;
     readMinutes?: number;
   };
+  locked?: boolean;
 }
 
-const { title, currentSlug, meta, variant = 'app' } = Astro.props;
+const { title, currentSlug, meta, variant = 'app', locked } = Astro.props;
 ---
 
 {
@@ -23,7 +24,7 @@ const { title, currentSlug, meta, variant = 'app' } = Astro.props;
       <slot />
     </LandingLayout>
   ) :
-  <TyporaLayout title={title} currentSlug={currentSlug} meta={meta}>
+  <TyporaLayout title={title} currentSlug={currentSlug} meta={meta} locked={locked}>
     <slot />
   </TyporaLayout>
 }

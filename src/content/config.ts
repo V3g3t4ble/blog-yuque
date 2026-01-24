@@ -9,6 +9,7 @@ const posts = defineCollection({
     updated: z.date().optional(),
     description: z.string().optional(),
     sort: z.number().optional(), // Add sort field
+    locked: z.boolean().optional(),
   }),
 });
 

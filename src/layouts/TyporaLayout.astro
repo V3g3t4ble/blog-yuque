@@ -18,13 +18,18 @@ interface Props {
     words?: number;
     readMinutes?: number;
   };
+  locked?: boolean;
 }
 
-const { title, currentSlug, meta } = Astro.props;
+const { title, currentSlug, meta, locked } = Astro.props;
 const showHomeButton = !!currentSlug;
 const isHome = title === 'Home' && !currentSlug;
 const homeHref = `${import.meta.env.BASE_URL}home`;
 const hasPassword = !!SiteConfig.password;
+// const isLocked = locked || /🔒|🔐|🔏/.test(title);
+// If locked prop is explicitly provided (from yuque loader), use it.
+// Otherwise fall back to title check (legacy behavior or for other content sources)
+const isLocked = locked !== undefined ? locked : /🔒|🔐|🔏/.test(title);
 
 const posts = await getCollection('posts');
 const tree = buildFileTree(posts);
@@ -512,9 +517,8 @@ const tree = buildFileTree(posts);
     </style>
   </head>
   <body class="theme-typora selection:bg-blue-100 selection:text-blue-900" data-page={isHome ? 'home' : 'post'}>
-    <TyporaLoginGate>
-      <div id="typora-shell" class="typora-shell">
-        <div id="typora-mobile-overlay" class="typora-mobile-overlay"></div>
+    <div id="typora-shell" class="typora-shell">
+      <div id="typora-mobile-overlay" class="typora-mobile-overlay"></div>
         <aside class="typora-sidebar">
           <div id="typora-sidebar-header" class="typora-sidebar-header">
             <button id="typora-view-toggle" class="typora-icon-btn" type="button" aria-label="切换视图">
@@ -582,9 +586,11 @@ const tree = buildFileTree(posts);
                 {meta?.readMinutes ? <span class="typora-meta-item">阅读：{meta.readMinutes} 分钟</span> : null}
               </div>
             ) : null}
-            <article class="typora-prose">
-              <slot />
-            </article>
+            <TyporaLoginGate password={isLocked ? SiteConfig.password : ''}>
+              <article class="typora-prose">
+                <slot />
+              </article>
+            </TyporaLoginGate>
             {!isHome && currentSlug ? <TyporaGiscus /> : null}
           </div>
         </main>

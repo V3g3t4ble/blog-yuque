@@ -31,6 +31,6 @@ const meta = {
 };
 ---
 
-<Layout title={entry.data.title} currentSlug={entry.id} meta={meta}>
+<Layout title={entry.data.title} currentSlug={entry.id} meta={meta} locked={entry.data.locked}>
   <TyporaPost content={entry.body ?? ''} />
 </Layout>

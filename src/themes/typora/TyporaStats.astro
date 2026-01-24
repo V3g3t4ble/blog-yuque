@@ -6,7 +6,7 @@ const posts = await getCollection('posts');
 
 const totalPosts = posts.length;
 const totalWords = posts.reduce((acc, post) => {
-  const words = post.body.trim().split(/\s+/).length;
+  const words = (post.body || '').trim().split(/\s+/).filter(Boolean).length;
   return acc + words;
 }, 0);
 
@@ -14,7 +14,7 @@ const lastUpdated = posts.length > 0
   ? new Date(Math.max(...posts.map(p => getPostDate(p).getTime())))
   : new Date();
 
-const totalSizeKB = (posts.reduce((acc, post) => acc + post.body.length, 0) / 1024).toFixed(1);
+const totalSizeKB = (posts.reduce((acc, post) => acc + (post.body || '').length, 0) / 1024).toFixed(1);
 ---
 
 <div class="typora-stats">

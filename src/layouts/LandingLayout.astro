@@ -10,9 +10,10 @@ interface Props {
 const { title } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const homeHref = `${base}home`;
-const hasPassword = !!SiteConfig.password;
+// const isLocked = /🔒|🔐|🔏/.test(title);
+// const hasPassword = isLocked && !!SiteConfig.password;
 const ctaText = '点击进入';
-const passwordHash = hasPassword ? CryptoJS.SHA256(SiteConfig.password).toString() : '';
+// const passwordHash = hasPassword ? CryptoJS.SHA256(SiteConfig.password).toString() : '';
 const friendLinks = SiteConfig.friendLinks || [];
 
 const posts = await getCollection('posts');
@@ -496,9 +497,9 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
     </style>
   </head>
   <body>
-    {hasPassword ? (
+    {/* {hasPassword ? (
       <div id="landing-auth-config" data-hash={passwordHash} data-home={homeHref} class="hidden"></div>
-    ) : null}
+    ) : null} */}
     <main class="page">
       <div class="container">
         <section class="hero">
@@ -518,15 +519,13 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
                 <span class="hero-chip">逆向工程</span>
               </div>
               <div class="hero-cta">
-                {hasPassword ? (
-                  <button id="landing-enter" class="btn primary cta" type="button" aria-label={ctaText}>
-                    {ctaText}
-                  </button>
-                ) : (
-                  <a class="btn primary cta" href={homeHref} aria-label={ctaText}>
-                    {ctaText}
-                  </a>
-                )}
+                <a class="btn primary cta" href={homeHref} aria-label={ctaText} style="text-decoration:none">
+                  {ctaText}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"></path>
+                    <path d="m12 5 7 7-7 7"></path>
+                  </svg>
+                </a>
               </div>
             </div>
 
@@ -594,7 +593,7 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
       </div>
     </main>
 
-    {hasPassword ? (
+    {/* {hasPassword ? (
       <div id="landing-login" class="landing-login hidden" aria-hidden="true">
         <div id="landing-login-backdrop" class="landing-login-backdrop"></div>
         <div class="landing-login-modal" role="dialog" aria-modal="true">
@@ -691,7 +690,7 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
           if (e.key === 'Enter' && !(login?.classList.contains('hidden'))) attempt();
         });
       </script>
-    ) : null}
+    ) : null} */}
 
     <script>
       const el = document.getElementById('landing-daily');
