@@ -69,7 +69,6 @@ const passwordHash = isEnabled ? CryptoJS.SHA512(password).toString() : '';
         const login = document.getElementById('typora-login');
         const app = document.getElementById('typora-app');
         if (!login || !app) return;
-        document.documentElement.style.overflow = 'hidden';
         login.setAttribute('aria-hidden', 'false');
         login.classList.remove('hidden');
         app.classList.add('hidden');
@@ -83,7 +82,6 @@ const passwordHash = isEnabled ? CryptoJS.SHA512(password).toString() : '';
         const login = document.getElementById('typora-login');
         const app = document.getElementById('typora-app');
         if (!login || !app) return;
-        document.documentElement.style.overflow = '';
         login.setAttribute('aria-hidden', 'true');
         login.classList.add('hidden');
         app.classList.remove('hidden');
@@ -169,26 +167,32 @@ const passwordHash = isEnabled ? CryptoJS.SHA512(password).toString() : '';
       }
 
       .typora-login {
-        position: fixed;
-        inset: 0;
         width: 100%;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
+        min-height: 420px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         font-family: 'Inter', system-ui, sans-serif;
         text-align: center;
-        padding: 28px 20px;
-        z-index: 90;
+        padding: 40px 20px;
+        position: relative;
+        overflow: hidden;
+        border-radius: 18px;
       }
       .typora-login-backdrop {
         position: absolute;
         inset: 0;
-        background: rgba(17, 24, 39, 0.22);
-        -webkit-backdrop-filter: blur(10px);
-        backdrop-filter: blur(10px);
+        background:
+          radial-gradient(900px circle at 22% 18%, rgba(10, 132, 255, 0.22), transparent 58%),
+          radial-gradient(900px circle at 82% 78%, rgba(52, 199, 89, 0.16), transparent 60%),
+          rgba(17, 24, 39, 0.10);
+        -webkit-backdrop-filter: saturate(220%) blur(14px);
+        backdrop-filter: saturate(220%) blur(14px);
       }
       .typora-login-card {
         position: relative;
+        z-index: 1;
         width: min(520px, 100%);
         padding: 26px 22px 20px;
         border-radius: 18px;
@@ -299,7 +303,10 @@ const passwordHash = isEnabled ? CryptoJS.SHA512(password).toString() : '';
            background: rgba(28, 28, 30, 0.92);
         }
         .typora-login-backdrop {
-          background: rgba(0, 0, 0, 0.40);
+          background:
+            radial-gradient(900px circle at 22% 18%, rgba(10, 132, 255, 0.22), transparent 58%),
+            radial-gradient(900px circle at 82% 78%, rgba(52, 199, 89, 0.14), transparent 60%),
+            rgba(0, 0, 0, 0.38);
         }
         .typora-login-btn {
           border-color: rgba(10, 132, 255, 0.26);
