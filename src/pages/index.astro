@@ -1,5 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { isSSRMode } from '../services/posts';
+
+export const prerender = !isSSRMode();
 ---
 
 <Layout title="Welcome" variant="landing" />

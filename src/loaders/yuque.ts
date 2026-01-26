@@ -264,7 +264,6 @@ export function yuqueLoader(): Loader {
             id: slug,
             data: {
               title: docInfo.title,
-              description: docInfo.description || '',
               date: new Date(docInfo.created_at),
               updated: new Date((docInfo as any).updated_at || (detail as any).updated_at || docInfo.created_at),
               sort: sortOrder !== -1 ? sortOrder : 999999, // Store sort order

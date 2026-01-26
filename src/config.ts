@@ -32,11 +32,6 @@ export const SiteConfig = {
         .map((t: string) => t.trim())
         .filter(Boolean),
     },
-    wechat: {
-      enabled: import.meta.env.TYPORA_WECHAT_HINT_ENABLED === 'true',
-      name: import.meta.env.TYPORA_WECHAT_NAME,
-      qrImage: import.meta.env.TYPORA_WECHAT_QR_IMAGE,
-    },
   },
   giscus: {
     enabled: true,

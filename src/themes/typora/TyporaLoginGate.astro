@@ -9,9 +9,6 @@ interface Props {
 const { password = SiteConfig.password } = Astro.props;
 const isEnabled = !!password;
 const passwordHash = isEnabled ? CryptoJS.SHA512(password).toString() : '';
-const wechatEnabled = SiteConfig.typora?.wechat?.enabled;
-const wechatName = SiteConfig.typora?.wechat?.name;
-const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
 ---
 
 {!isEnabled ? (
@@ -40,19 +37,6 @@ const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
           </button>
         </div>
         <div id="typora-login-error" class="typora-login-error hidden"></div>
-
-        {wechatEnabled ? (
-          <div class="typora-login-help">
-            <div class="typora-login-help-text">
-              {wechatName ? <>关注公众号 <span class="typora-login-help-strong">{wechatName}</span> 获取密码</> : '联系作者获取访问密码'}
-            </div>
-            {wechatQrImage ? (
-              <div class="typora-login-qr-wrapper">
-                 <img class="typora-login-help-qr" src={wechatQrImage} alt="公众号二维码" loading="lazy" />
-              </div>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     </div>
 
@@ -193,11 +177,21 @@ const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
         text-align: center;
         padding: 40px 20px;
       }
+      .typora-login-card {
+        width: min(520px, 100%);
+        padding: 26px 22px 20px;
+        border-radius: 18px;
+        border: 1px solid var(--lp-border, rgba(0, 0, 0, 0.10));
+        background: linear-gradient(180deg, var(--lp-glass-strong, rgba(255, 255, 255, 0.78)), var(--lp-glass, rgba(255, 255, 255, 0.62)));
+        box-shadow: var(--lp-shadow, 0 18px 64px rgba(0, 0, 0, 0.12));
+        -webkit-backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(var(--lp-blur, 22px));
+        backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(var(--lp-blur, 22px));
+      }
       .typora-login-icon {
-        color: #9ca3af;
+        color: var(--lp-muted, #9ca3af);
         margin-bottom: 24px;
         padding: 20px;
-        background: rgba(0, 0, 0, 0.03);
+        background: var(--lp-hover, rgba(0, 0, 0, 0.03));
         border-radius: 50%;
         display: inline-flex;
       }
@@ -210,7 +204,7 @@ const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
       }
       .typora-login-subtitle {
         font-size: 15px;
-        color: #6b7280;
+        color: var(--lp-muted, #6b7280);
         margin-bottom: 32px;
       }
       .typora-login-form {
@@ -225,18 +219,20 @@ const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
         flex: 1;
         height: 44px;
         border-radius: 12px;
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--lp-border, rgba(0, 0, 0, 0.10));
         padding: 0 16px;
         font-size: 15px;
         outline: none;
-        color: #111827;
-        background: rgba(255, 255, 255, 0.6);
+        color: var(--lp-fg, #111827);
+        background: var(--lp-glass-opaque, rgba(255, 255, 255, 0.78));
         transition: all 0.2s;
+        -webkit-backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(calc(var(--lp-blur, 22px) - 10px));
+        backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(calc(var(--lp-blur, 22px) - 10px));
       }
       .typora-login-input:focus {
-        border-color: rgba(37, 99, 235, 0.5);
-        background: #ffffff;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        border-color: rgba(10, 132, 255, 0.65);
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.16);
       }
       .typora-login-btn {
         width: 40px;
@@ -252,9 +248,9 @@ const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
         transition: all 0.2s;
       }
       .typora-login-btn:hover {
-        background: #1d4ed8;
+        background: rgba(10, 132, 255, 0.92);
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        box-shadow: 0 10px 26px rgba(10,  132, 255, 0.26);
       }
       .typora-login-btn:active {
         transform: translateY(0);
@@ -264,50 +260,19 @@ const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
         font-size: 13px;
         color: #dc2626;
         font-weight: 500;
-        height: 20px; /* reserve space */
-      }
-      .typora-login-help {
-        margin-top: 48px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-      }
-      .typora-login-help-text {
-        font-size: 13px;
-        color: #6b7280;
-      }
-      .typora-login-help-strong {
-        font-weight: 600;
-        color: #374151;
-      }
-      .typora-login-qr-wrapper {
-        padding: 8px;
-        background: #fff;
-        border-radius: 12px;
-        border: 1px solid rgba(0,0,0,0.06);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      }
-      .typora-login-help-qr {
-        width: 140px;
-        height: 140px;
-        border-radius: 6px;
-        display: block;
+        height: 20px;
       }
       @media (prefers-color-scheme: dark) {
-        .typora-login-title { color: #f3f4f6; }
-        .typora-login-subtitle { color: #9ca3af; }
         .typora-login-input {
-           background: rgba(255, 255, 255, 0.05);
-           border-color: rgba(255, 255, 255, 0.1);
-           color: #f3f4f6;
+           background: var(--lp-glass-opaque, rgba(28, 28, 30, 0.78));
+           border-color: var(--lp-border, rgba(255, 255, 255, 0.14));
+           color: var(--lp-fg, #f3f4f6);
         }
         .typora-login-input:focus {
-           background: rgba(255, 255, 255, 0.1);
+           background: rgba(28, 28, 30, 0.92);
         }
-        .typora-login-btn { background: #f3f4f6; color: #111827; }
-        .typora-login-btn:hover { background: #ffffff; }
-        .typora-login-icon { background: rgba(255, 255, 255, 0.05); color: #9ca3af; }
+        .typora-login-btn { background: rgba(255, 255, 255, 0.92); color: rgba(28, 28, 30, 0.96); }
+        .typora-login-btn:hover { background: rgba(255, 255, 255, 0.98); }
       }
     </style>
   </>

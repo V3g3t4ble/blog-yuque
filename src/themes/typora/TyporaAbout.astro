@@ -10,11 +10,6 @@ const tags = SiteConfig.typora?.about?.tags || [];
 
 const website = SiteConfig.typora?.about?.website;
 
-const wechatEnabled = SiteConfig.typora?.wechat?.enabled;
-const wechatName = SiteConfig.typora?.wechat?.name;
-const wechatQrImage = SiteConfig.typora?.wechat?.qrImage;
-const showWechat = !!wechatEnabled && (!!wechatName || !!wechatQrImage);
-
 const links = [
   website ? { label: '主页', href: website } : null,
 ].filter(Boolean) as Array<{ label: string; href: string }>;
@@ -22,7 +17,7 @@ const links = [
 
 <section class="typora-about">
   <div class="typora-about-title">关于</div>
-  <div class={`typora-about-grid${showWechat ? '' : ' is-single'}`}>
+  <div class="typora-about-grid is-single">
     <div class="typora-about-main">
       <div class="typora-about-profile">
         <div class="typora-about-avatar">
@@ -48,18 +43,6 @@ const links = [
         </div>
       </div>
     </div>
-
-    {showWechat ? (
-      <div class="typora-about-side">
-        <div class="typora-about-wechat">
-          <div class="typora-about-wechat-title">公众号</div>
-          {wechatName ? <div class="typora-about-wechat-name">{wechatName}</div> : null}
-          {wechatQrImage ? (
-            <img class="typora-about-wechat-qr" src={wechatQrImage} alt="公众号二维码" loading="lazy" />
-          ) : null}
-        </div>
-      </div>
-    ) : null}
   </div>
 </section>
 
@@ -69,15 +52,16 @@ const links = [
     padding: 14px 14px 12px;
     border: 1px solid var(--lp-border-soft, rgba(0, 0, 0, 0.08));
     border-radius: 12px;
-    background: var(--lp-glass-strong, #fafafa);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-    backdrop-filter: blur(12px);
+    background: linear-gradient(180deg, var(--lp-glass-strong, rgba(255, 255, 255, 0.78)), var(--lp-glass, rgba(255, 255, 255, 0.62)));
+    box-shadow: var(--lp-shadow-soft, 0 12px 40px rgba(0, 0, 0, 0.08));
+    -webkit-backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(var(--lp-blur, 22px));
+    backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(var(--lp-blur, 22px));
   }
   .typora-about-title {
     font-size: 12px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #6b7280;
+    color: var(--lp-muted, #6b7280);
     margin-bottom: 10px;
     font-weight: 600;
   }
@@ -99,7 +83,7 @@ const links = [
     width: 56px;
     height: 56px;
     border-radius: 999px;
-    border: 1px solid rgba(0, 0, 0, 0.10);
+    border: 1px solid var(--lp-border, rgba(0, 0, 0, 0.10));
     background: radial-gradient(circle at 30% 30%, rgba(37, 99, 235, 0.20), rgba(0, 0, 0, 0.03));
     overflow: hidden;
     flex: 0 0 auto;
@@ -116,13 +100,13 @@ const links = [
   .typora-about-name {
     font-size: 16px;
     font-weight: 700;
-    color: #111827;
+    color: var(--lp-fg, #111827);
     margin-bottom: 6px;
   }
   .typora-about-bio {
     font-size: 13px;
     line-height: 1.65;
-    color: #4b5563;
+    color: var(--lp-muted, #4b5563);
   }
   .typora-about-tags {
     margin-top: 10px;
@@ -136,9 +120,9 @@ const links = [
     height: 22px;
     padding: 0 10px;
     border-radius: 999px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    background: rgba(255, 255, 255, 0.70);
-    color: #374151;
+    border: 1px solid var(--lp-border-soft, rgba(0, 0, 0, 0.08));
+    background: var(--lp-glass-opaque, rgba(255, 255, 255, 0.70));
+    color: var(--lp-fg, #374151);
     font-size: 12px;
     font-weight: 600;
   }
@@ -154,43 +138,16 @@ const links = [
     align-items: center;
     padding: 6px 10px;
     border-radius: 999px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    background: rgba(255, 255, 255, 0.8);
-    color: #111827;
+    border: 1px solid var(--lp-border-soft, rgba(0, 0, 0, 0.08));
+    background: var(--lp-glass-opaque, rgba(255, 255, 255, 0.8));
+    color: var(--lp-fg, #111827);
     text-decoration: none;
     font-size: 12px;
     font-weight: 600;
   }
   .typora-about-link:hover {
-    border-color: rgba(37, 99, 235, 0.25);
-    background: #ffffff;
-  }
-  .typora-about-wechat {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-  }
-  .typora-about-wechat-title {
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #9ca3af;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-  .typora-about-wechat-name {
-    font-size: 12px;
-    color: #111827;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-  .typora-about-wechat-qr {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 10px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    background: #fff;
+    border-color: rgba(10, 132, 255, 0.35);
+    background: rgba(255, 255, 255, 0.94);
   }
   @media (max-width: 640px) {
     .typora-about-grid {
@@ -199,10 +156,6 @@ const links = [
     .typora-about-avatar {
       width: 48px;
       height: 48px;
-    }
-    .typora-about-wechat-qr {
-      width: 140px;
-      height: 140px;
     }
   }
 </style>

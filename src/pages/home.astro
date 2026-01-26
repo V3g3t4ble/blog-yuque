@@ -3,6 +3,9 @@ import Layout from '../layouts/Layout.astro';
 import TyporaStats from '../themes/typora/TyporaStats.astro';
 import TyporaAbout from '../themes/typora/TyporaAbout.astro';
 import TyporaContributions from '../themes/typora/TyporaContributions.astro';
+import { isSSRMode } from '../services/posts';
+
+export const prerender = !isSSRMode();
 ---
 
 <Layout title="Home">

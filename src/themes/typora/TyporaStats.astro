@@ -1,8 +1,8 @@
 ---
-import { getCollection } from 'astro:content';
 import { getPostDate } from '../../utils/date';
+import { getAllPosts } from '../../services/posts';
 
-const posts = await getCollection('posts');
+const posts = await getAllPosts();
 
 const totalPosts = posts.length;
 const totalWords = posts.reduce((acc, post) => {
@@ -45,15 +45,16 @@ const totalSizeKB = (posts.reduce((acc, post) => acc + (post.body || '').length,
     padding: 14px 14px 12px;
     border: 1px solid var(--lp-border-soft, rgba(0, 0, 0, 0.08));
     border-radius: 12px;
-    background: var(--lp-glass-strong, #fafafa);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-    backdrop-filter: blur(12px);
+    background: linear-gradient(180deg, var(--lp-glass-strong, rgba(255, 255, 255, 0.78)), var(--lp-glass, rgba(255, 255, 255, 0.62)));
+    box-shadow: var(--lp-shadow-soft, 0 12px 40px rgba(0, 0, 0, 0.08));
+    -webkit-backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(var(--lp-blur, 22px));
+    backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(var(--lp-blur, 22px));
   }
   .typora-stats-title {
     font-size: 12px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #6b7280;
+    color: var(--lp-muted, #6b7280);
     margin-bottom: 10px;
     font-weight: 600;
   }
@@ -64,12 +65,12 @@ const totalSizeKB = (posts.reduce((acc, post) => acc + (post.body || '').length,
   }
   .typora-stats-item .k {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--lp-muted, #6b7280);
     margin-bottom: 2px;
   }
   .typora-stats-item .v {
     font-size: 14px;
-    color: #111827;
+    color: var(--lp-fg, #111827);
     font-weight: 600;
   }
   @media (max-width: 640px) {

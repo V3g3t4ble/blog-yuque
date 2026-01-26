@@ -1,7 +1,7 @@
 ---
 import { SiteConfig } from '../config';
 import CryptoJS from 'crypto-js';
-import { getCollection } from 'astro:content';
+import { getAllPosts } from '../services/posts';
 
 interface Props {
   title: string;
@@ -16,7 +16,7 @@ const ctaText = '点击进入';
 // const passwordHash = hasPassword ? CryptoJS.SHA256(SiteConfig.password).toString() : '';
 const friendLinks = SiteConfig.friendLinks || [];
 
-const posts = await getCollection('posts');
+const posts = await getAllPosts();
 const totalPosts = posts.length;
 const safeFormatDate = (date?: Date | null) => (date ? date.toISOString().split('T')[0] : '暂无');
 const updatedTimes = posts
@@ -42,25 +42,43 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap"></noscript>
     <style>
       :root {
-        font-family: 'Inter', system-ui, sans-serif;
-        color-scheme: light;
-      }
-      html.dark {
-        color-scheme: dark;
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        color-scheme: light dark;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
       body {
+        --lp-accent-1: #0a84ff;
+        --lp-accent-2: #34c759;
+        --lp-bg: #f2f2f7;
+        --lp-fg: rgba(28, 28, 30, 0.96);
+        --lp-muted: rgba(60, 60, 67, 0.78);
+        --lp-border: rgba(60, 60, 67, 0.18);
+        --lp-border-soft: rgba(60, 60, 67, 0.12);
+        --lp-glass: rgba(255, 255, 255, 0.46);
+        --lp-glass-strong: rgba(255, 255, 255, 0.64);
+        --lp-glass-opaque: rgba(255, 255, 255, 0.84);
+        --lp-hover: rgba(0, 0, 0, 0.045);
+        --lp-hover-strong: rgba(0, 0, 0, 0.075);
+        --lp-highlight: rgba(255, 255, 255, 0.62);
+        --lp-highlight-soft: rgba(255, 255, 255, 0.36);
+        --lp-blur: 36px;
+        --lp-saturate: 220%;
+        --lp-shadow: 0 38px 132px rgba(0, 0, 0, 0.18);
+        --lp-shadow-soft: 0 18px 64px rgba(0, 0, 0, 0.12);
+
         margin: 0;
         height: 100vh;
-        background: radial-gradient(1200px 700px at 20% 15%, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0)),
-          radial-gradient(1000px 650px at 80% 75%, rgba(34, 197, 94, 0.10), rgba(255, 255, 255, 0)),
-          #ffffff;
-        color: #111827;
-      }
-      html.dark body {
-        background: radial-gradient(1200px 700px at 20% 15%, rgba(37, 99, 235, 0.22), rgba(9, 9, 11, 0)),
-          radial-gradient(1000px 650px at 80% 75%, rgba(34, 197, 94, 0.16), rgba(9, 9, 11, 0)),
-          #09090b;
-        color: #e5e7eb;
+        background-color: var(--lp-bg);
+        background-image:
+          radial-gradient(1100px circle at 18% 22%, rgba(10, 132, 255, 0.32), transparent 58%),
+          radial-gradient(900px circle at 78% 12%, rgba(175, 82, 222, 0.20), transparent 56%),
+          radial-gradient(1100px circle at 84% 78%, rgba(52, 199, 89, 0.22), transparent 60%),
+          repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0 1px, rgba(255, 255, 255, 0) 1px 8px),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0));
+        background-attachment: fixed;
+        color: var(--lp-fg);
       }
       a { color: inherit; }
       .page {
@@ -84,26 +102,22 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         height: 40px;
         padding: 0 16px;
         border-radius: 999px;
-        border: 1px solid rgba(0, 0, 0, 0.10);
-        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--lp-border-soft);
+        background: var(--lp-glass-opaque);
         text-decoration: none;
         font-weight: 700;
         font-size: 14px;
-        color: #111827;
-      }
-      html.dark .btn {
-        border-color: rgba(255, 255, 255, 0.14);
-        background: rgba(24, 24, 27, 0.85);
-        color: #f4f4f5;
+        color: var(--lp-fg);
+        -webkit-backdrop-filter: saturate(var(--lp-saturate)) blur(calc(var(--lp-blur) - 10px));
+        backdrop-filter: saturate(var(--lp-saturate)) blur(calc(var(--lp-blur) - 10px));
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.10), inset 0 1px 0 var(--lp-highlight-soft);
       }
       .btn.primary {
-        border-color: rgba(37, 99, 235, 0.20);
-        background: #2563eb;
+        border-color: rgba(10, 132, 255, 0.28);
+        background: rgba(10, 132, 255, 0.92);
         color: #ffffff;
       }
-      html.dark .btn.primary {
-        border-color: rgba(37, 99, 235, 0.30);
-      }
+      .btn.primary:hover { background: rgba(10, 132, 255, 0.98); }
       .btn.cta {
         font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-weight: 800;
@@ -112,18 +126,16 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
       .btn svg { opacity: 0.9; }
       .hero {
         flex: 1 1 auto;
-        border: 1px solid rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--lp-border-soft);
         border-radius: 18px;
         padding: clamp(22px, 3.5vw, 48px);
-        background: rgba(255, 255, 255, 0.55);
-        backdrop-filter: blur(14px);
+        background: linear-gradient(180deg, var(--lp-glass-strong), var(--lp-glass));
+        -webkit-backdrop-filter: saturate(var(--lp-saturate)) blur(var(--lp-blur));
+        backdrop-filter: saturate(var(--lp-saturate)) blur(var(--lp-blur));
+        box-shadow: var(--lp-shadow), inset 0 1px 0 var(--lp-highlight), inset 0 0 0 1px rgba(255, 255, 255, 0.22);
         min-height: calc(100vh - (clamp(18px, 4vw, 44px) * 2));
         display: flex;
         align-items: stretch;
-      }
-      html.dark .hero {
-        border-color: rgba(255, 255, 255, 0.10);
-        background: rgba(24, 24, 27, 0.55);
       }
       .hero-grid {
         display: grid;
@@ -145,14 +157,13 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         height: 100%;
       }
       .side-card {
-        border: 1px solid rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--lp-border-soft);
         border-radius: 14px;
-        background: rgba(255, 255, 255, 0.62);
+        background: linear-gradient(180deg, var(--lp-glass-strong), var(--lp-glass));
         padding: 14px;
-      }
-      html.dark .side-card {
-        border-color: rgba(255, 255, 255, 0.10);
-        background: rgba(9, 9, 11, 0.28);
+        -webkit-backdrop-filter: saturate(var(--lp-saturate)) blur(calc(var(--lp-blur) - 4px));
+        backdrop-filter: saturate(var(--lp-saturate)) blur(calc(var(--lp-blur) - 4px));
+        box-shadow: var(--lp-shadow-soft), inset 0 1px 0 var(--lp-highlight-soft), inset 0 0 0 1px rgba(255, 255, 255, 0.18);
       }
       .side-card.links {
         flex: 1 1 auto;
@@ -165,12 +176,9 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         font-weight: 900;
         letter-spacing: 0.10em;
         text-transform: uppercase;
-        color: rgba(107, 114, 128, 0.95);
+        color: var(--lp-muted);
         margin-bottom: 10px;
         user-select: none;
-      }
-      html.dark .side-title {
-        color: rgba(161, 161, 170, 0.95);
       }
       .landing-stats-grid {
         display: grid;
@@ -179,21 +187,16 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
       }
       .landing-stat .k {
         font-size: 12px;
-        color: rgba(107, 114, 128, 0.95);
+        color: var(--lp-muted);
         margin-bottom: 2px;
         font-weight: 700;
-      }
-      html.dark .landing-stat .k {
-        color: rgba(161, 161, 170, 0.95);
       }
       .landing-stat .v {
         font-size: 13px;
         font-weight: 800;
-        color: rgba(17, 24, 39, 0.78);
+        color: var(--lp-fg);
+        opacity: 0.86;
         font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      }
-      html.dark .landing-stat .v {
-        color: rgba(229, 231, 235, 0.84);
       }
       .status-item {
         margin-bottom: 10px;
@@ -208,10 +211,8 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         gap: 10px;
         font-size: 13px;
         font-weight: 800;
-        color: rgba(17, 24, 39, 0.78);
-      }
-      html.dark .status-row {
-        color: rgba(229, 231, 235, 0.82);
+        color: var(--lp-fg);
+        opacity: 0.86;
       }
       .status-val {
         font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -223,26 +224,20 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         margin-top: 6px;
         height: 8px;
         border-radius: 999px;
-        background: rgba(0, 0, 0, 0.08);
+        background: var(--lp-hover-strong);
         overflow: hidden;
-      }
-      html.dark .status-bar {
-        background: rgba(255, 255, 255, 0.10);
       }
       .status-fill {
         height: 100%;
         border-radius: 999px;
-        background: linear-gradient(90deg, rgba(37, 99, 235, 0.85), rgba(34, 197, 94, 0.85));
+        background: linear-gradient(90deg, rgba(10, 132, 255, 0.92), rgba(52, 199, 89, 0.88));
       }
       .status-ellipsis {
         font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        color: rgba(107, 114, 128, 0.95);
+        color: var(--lp-muted);
         font-weight: 800;
         letter-spacing: 0.18em;
         margin-top: 2px;
-      }
-      html.dark .status-ellipsis {
-        color: rgba(161, 161, 170, 0.95);
       }
       .friend-links {
         display: flex;
@@ -262,7 +257,8 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         background: transparent;
         font-size: 13px;
         font-weight: 800;
-        color: rgba(17, 24, 39, 0.78);
+        color: var(--lp-fg);
+        opacity: 0.86;
         text-decoration: none;
       }
       .friend-link::before {
@@ -270,36 +266,20 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         width: 8px;
         height: 8px;
         border-radius: 999px;
-        background: rgba(17, 24, 39, 0.72);
+        background: rgba(10, 132, 255, 0.70);
         flex: 0 0 auto;
       }
       .friend-link:hover {
-        background: rgba(37, 99, 235, 0.08);
-        color: rgba(37, 99, 235, 0.95);
+        background: rgba(10, 132, 255, 0.12);
+        color: var(--lp-fg);
+        opacity: 1;
       }
       .friend-link:hover::before {
-        background: rgba(37, 99, 235, 0.90);
+        background: rgba(10, 132, 255, 0.92);
       }
       .friend-link:focus-visible {
-        outline: 4px solid rgba(37, 99, 235, 0.18);
+        outline: 4px solid rgba(10, 132, 255, 0.18);
         outline-offset: 2px;
-      }
-      html.dark .friend-link {
-        background: transparent;
-        color: rgba(229, 231, 235, 0.84);
-      }
-      html.dark .friend-link::before {
-        background: rgba(229, 231, 235, 0.75);
-      }
-      html.dark .friend-link:hover {
-        background: rgba(34, 197, 94, 0.12);
-        color: rgba(255, 255, 255, 0.95);
-      }
-      html.dark .friend-link:hover::before {
-        background: rgba(34, 197, 94, 0.90);
-      }
-      html.dark .friend-link:focus-visible {
-        outline-color: rgba(34, 197, 94, 0.22);
       }
       .brand {
         display: inline-flex;
@@ -314,7 +294,7 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         width: 10px;
         height: 10px;
         border-radius: 999px;
-        background: linear-gradient(135deg, #2563eb, #22c55e);
+        background: linear-gradient(135deg, rgba(10, 132, 255, 1), rgba(175, 82, 222, 0.95), rgba(52, 199, 89, 1));
       }
       .hero-title {
         font-size: clamp(34px, 4.2vw, 54px);
@@ -326,7 +306,7 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
       .hero-desc {
         margin: 0;
         max-width: 74ch;
-        color: rgba(17, 24, 39, 0.78);
+        color: var(--lp-muted);
         line-height: 1.7;
         font-size: 16px;
       }
@@ -335,9 +315,6 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         margin-top: 6px;
         font-size: 0.95em;
         opacity: 0.78;
-      }
-      html.dark .hero-desc {
-        color: rgba(229, 231, 235, 0.78);
       }
       .hero-cta {
         margin-top: 18px;
@@ -357,25 +334,18 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         height: 26px;
         padding: 0 10px;
         border-radius: 999px;
-        border: 1px solid rgba(0, 0, 0, 0.10);
-        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid var(--lp-border-soft);
+        background: var(--lp-glass-opaque);
         font-size: 12px;
         font-weight: 700;
-        color: rgba(17, 24, 39, 0.78);
+        color: var(--lp-fg);
+        opacity: 0.84;
         user-select: none;
-      }
-      html.dark .hero-chip {
-        border-color: rgba(255, 255, 255, 0.12);
-        background: rgba(63, 63, 70, 0.25);
-        color: rgba(229, 231, 235, 0.78);
       }
       .hero-hint {
         margin-top: 10px;
         font-size: 13px;
-        color: rgba(107, 114, 128, 0.95);
-      }
-      html.dark .hero-hint {
-        color: rgba(161, 161, 170, 0.95);
+        color: var(--lp-muted);
       }
       .landing-login.hidden,
       .landing-login-error.hidden {
@@ -392,25 +362,20 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
       .landing-login-backdrop {
         position: absolute;
         inset: 0;
-        background: rgba(17, 24, 39, 0.18);
+        background: rgba(17, 24, 39, 0.20);
+        -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
-      }
-      html.dark .landing-login-backdrop {
-        background: rgba(0, 0, 0, 0.35);
       }
       .landing-login-modal {
         position: relative;
         width: min(520px, calc(100vw - 48px));
         border-radius: 16px;
-        background: rgba(255, 255, 255, 0.85);
-        border: 1px solid rgba(0, 0, 0, 0.10);
-        box-shadow: 0 18px 64px rgba(0, 0, 0, 0.20);
+        background: linear-gradient(180deg, var(--lp-glass-strong), var(--lp-glass));
+        border: 1px solid var(--lp-border);
+        box-shadow: var(--lp-shadow);
         padding: 24px 22px 22px;
-        backdrop-filter: blur(14px);
-      }
-      html.dark .landing-login-modal {
-        background: rgba(24, 24, 27, 0.80);
-        border-color: rgba(255, 255, 255, 0.12);
+        -webkit-backdrop-filter: saturate(var(--lp-saturate)) blur(var(--lp-blur));
+        backdrop-filter: saturate(var(--lp-saturate)) blur(var(--lp-blur));
       }
       .landing-login-title {
         font-size: 22px;
@@ -421,29 +386,23 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
       .landing-login-subtitle {
         margin: 0 0 14px;
         font-size: 13px;
-        color: rgba(107, 114, 128, 0.95);
-      }
-      html.dark .landing-login-subtitle {
-        color: rgba(161, 161, 170, 0.95);
+        color: var(--lp-muted);
       }
       .landing-login-input {
         width: 100%;
         border-radius: 12px;
-        border: 1px solid rgba(0, 0, 0, 0.12);
+        border: 1px solid var(--lp-border);
         padding: 12px 14px;
         font-size: 14px;
         outline: none;
-        color: #111827;
-        background: rgba(255, 255, 255, 0.95);
-      }
-      html.dark .landing-login-input {
-        border-color: rgba(255, 255, 255, 0.14);
-        color: #f4f4f5;
-        background: rgba(9, 9, 11, 0.45);
+        color: var(--lp-fg);
+        background: var(--lp-glass-opaque);
+        -webkit-backdrop-filter: saturate(var(--lp-saturate)) blur(calc(var(--lp-blur) - 10px));
+        backdrop-filter: saturate(var(--lp-saturate)) blur(calc(var(--lp-blur) - 10px));
       }
       .landing-login-input:focus {
-        border-color: rgba(37, 99, 235, 0.55);
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+        border-color: rgba(10, 132, 255, 0.65);
+        box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.16);
       }
       .landing-login-error {
         margin-top: 10px;
@@ -460,29 +419,27 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         height: 40px;
         padding: 0 16px;
         border-radius: 999px;
-        border: 1px solid rgba(37, 99, 235, 0.20);
-        background: #2563eb;
+        border: 1px solid rgba(10, 132, 255, 0.28);
+        background: rgba(10, 132, 255, 0.92);
         color: #ffffff;
         font-weight: 800;
         cursor: pointer;
       }
       .landing-login-btn:hover {
-        background: #1d4ed8;
+        background: rgba(10, 132, 255, 0.98);
       }
       .landing-login-cancel {
         height: 40px;
         padding: 0 16px;
         border-radius: 999px;
-        border: 1px solid rgba(0, 0, 0, 0.10);
-        background: rgba(255, 255, 255, 0.85);
-        color: rgba(17, 24, 39, 0.78);
+        border: 1px solid var(--lp-border-soft);
+        background: var(--lp-glass-opaque);
+        color: var(--lp-fg);
+        opacity: 0.86;
         font-weight: 800;
         cursor: pointer;
-      }
-      html.dark .landing-login-cancel {
-        border-color: rgba(255, 255, 255, 0.14);
-        background: rgba(63, 63, 70, 0.25);
-        color: rgba(229, 231, 235, 0.82);
+        -webkit-backdrop-filter: saturate(var(--lp-saturate)) blur(calc(var(--lp-blur) - 10px));
+        backdrop-filter: saturate(var(--lp-saturate)) blur(calc(var(--lp-blur) - 10px));
       }
       @media (max-width: 800px) {
         .hero { min-height: calc(100vh - 36px); }
@@ -492,6 +449,50 @@ const lastUpdatedAt = updatedTimes.length ? new Date(Math.max(...updatedTimes)) 
         }
         .hero-main {
           justify-content: flex-start;
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          --lp-bg: #0b0c10;
+          --lp-fg: rgba(255, 255, 255, 0.92);
+          --lp-muted: rgba(235, 235, 245, 0.62);
+          --lp-border: rgba(235, 235, 245, 0.18);
+          --lp-border-soft: rgba(235, 235, 245, 0.12);
+          --lp-glass: rgba(28, 28, 30, 0.58);
+          --lp-glass-strong: rgba(28, 28, 30, 0.72);
+          --lp-glass-opaque: rgba(28, 28, 30, 0.88);
+          --lp-hover: rgba(255, 255, 255, 0.06);
+          --lp-hover-strong: rgba(255, 255, 255, 0.10);
+          --lp-highlight: rgba(255, 255, 255, 0.12);
+          --lp-highlight-soft: rgba(255, 255, 255, 0.08);
+          --lp-shadow: 0 28px 96px rgba(0, 0, 0, 0.58);
+          --lp-shadow-soft: 0 16px 56px rgba(0, 0, 0, 0.44);
+          background-color: var(--lp-bg);
+          background-image:
+            radial-gradient(1100px circle at 18% 22%, rgba(10, 132, 255, 0.34), transparent 58%),
+            radial-gradient(900px circle at 78% 12%, rgba(191, 90, 242, 0.22), transparent 56%),
+            radial-gradient(1100px circle at 84% 78%, rgba(52, 199, 89, 0.18), transparent 60%),
+            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0 1px, rgba(255, 255, 255, 0) 1px 8px),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+        }
+      }
+
+      @media (prefers-reduced-transparency: reduce) {
+        body {
+          --lp-glass: rgba(255, 255, 255, 0.92);
+          --lp-glass-strong: rgba(255, 255, 255, 0.96);
+          --lp-glass-opaque: rgba(255, 255, 255, 0.98);
+        }
+        .hero,
+        .side-card,
+        .btn,
+        .landing-login-backdrop,
+        .landing-login-modal,
+        .landing-login-input,
+        .landing-login-cancel {
+          -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
         }
       }
     </style>

@@ -1,8 +1,8 @@
 ---
-import type { CollectionEntry } from 'astro:content';
+import type { PostEntry } from '../../types/post';
 
 interface Props {
-  posts: CollectionEntry<'posts'>[];
+  posts: PostEntry[];
 }
 
 const { posts } = Astro.props;
@@ -336,15 +336,15 @@ const searchIndex = posts.map((post) => ({
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #6b7280;
+    color: var(--lp-muted, #6b7280);
     cursor: pointer;
   }
   #typora-search-root .typora-search-icon:hover {
-    color: #111827;
-    background: rgba(0, 0, 0, 0.05);
+    color: var(--lp-fg, #111827);
+    background: var(--lp-hover, rgba(0, 0, 0, 0.05));
   }
   #typora-search-root .typora-search-icon:focus-visible {
-    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline: 2px solid rgba(10, 132, 255, 0.65);
     outline-offset: 2px;
   }
   #typora-search-root.typora-search.is-open .typora-search-icon {
@@ -368,32 +368,36 @@ const searchIndex = posts.map((post) => ({
     align-items: center;
     justify-content: center;
     border-radius: 9px;
-    border: 1px solid rgba(0, 0, 0, 0.10);
-    background: #ffffff;
-    color: #6b7280;
+    border: 1px solid var(--lp-border-soft, rgba(0, 0, 0, 0.10));
+    background: var(--lp-glass-opaque, #ffffff);
+    color: var(--lp-muted, #6b7280);
     cursor: pointer;
+    -webkit-backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(calc(var(--lp-blur, 20px) - 10px));
+    backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(calc(var(--lp-blur, 20px) - 10px));
   }
   #typora-search-root .typora-search-back:hover {
-    color: #111827;
+    color: var(--lp-fg, #111827);
   }
   #typora-search-root .typora-search-back:focus-visible {
-    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline: 2px solid rgba(10, 132, 255, 0.65);
     outline-offset: 2px;
   }
   #typora-search-root .typora-search-input {
     flex: 1;
     height: 30px;
     border-radius: 9px;
-    border: 1px solid rgba(0, 0, 0, 0.10);
+    border: 1px solid var(--lp-border-soft, rgba(0, 0, 0, 0.10));
     padding: 0 10px;
     font-size: 13px;
     outline: none;
-    color: #111827;
-    background: #ffffff;
+    color: var(--lp-fg, #111827);
+    background: var(--lp-glass-opaque, #ffffff);
+    -webkit-backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(calc(var(--lp-blur, 20px) - 10px));
+    backdrop-filter: saturate(var(--lp-saturate, 180%)) blur(calc(var(--lp-blur, 20px) - 10px));
   }
   #typora-search-root .typora-search-input:focus {
-    border-color: rgba(37, 99, 235, 0.55);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    border-color: rgba(10, 132, 255, 0.65);
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.16);
   }
   #typora-search-root .typora-search-results.hidden {
     display: none;
@@ -411,7 +415,7 @@ const searchIndex = posts.map((post) => ({
   }
   #typora-search-root .typora-empty {
     padding: 10px 10px;
-    color: #6b7280;
+    color: var(--lp-muted, #6b7280);
     font-size: 13px;
   }
   #typora-search-root .typora-result {
@@ -423,19 +427,19 @@ const searchIndex = posts.map((post) => ({
     text-decoration: none;
   }
   #typora-search-root .typora-result:hover {
-    background: rgba(0, 0, 0, 0.03);
+    background: var(--lp-hover, rgba(0, 0, 0, 0.03));
   }
   #typora-search-root .typora-result.is-active {
-    background: rgba(37, 99, 235, 0.08);
+    background: rgba(10, 132, 255, 0.12);
   }
   #typora-search-root .typora-result:focus-visible {
-    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline: 2px solid rgba(10, 132, 255, 0.65);
     outline-offset: 2px;
   }
   #typora-search-root .typora-result .t {
     font-size: 13px;
     font-weight: 500;
-    color: #6b7280;
+    color: var(--lp-muted, #6b7280);
     line-height: 1.35;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -444,14 +448,15 @@ const searchIndex = posts.map((post) => ({
   #typora-search-root .typora-result .d {
     margin-top: 4px;
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--lp-muted, #9ca3af);
+    opacity: 0.78;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
   #typora-search-root .typora-search-hit {
-    background: rgba(37, 99, 235, 0.14);
-    color: #374151;
+    background: rgba(10, 132, 255, 0.16);
+    color: var(--lp-fg, #374151);
     border-radius: 4px;
     padding: 0 2px;
   }

@@ -66,19 +66,19 @@ const href = node.slug ? `${base}posts/${node.slug}`.replace(/\/+/g, '/') : '';
     border-radius: 6px;
     cursor: pointer;
     user-select: none;
-    color: #4b5563;
+    color: var(--lp-muted, #4b5563);
     font-weight: 500;
     font-size: 13px;
   }
   .typora-tree-summary:hover {
-    background: rgba(0, 0, 0, 0.03);
-    color: #111827;
+    background: var(--lp-hover, rgba(0, 0, 0, 0.03));
+    color: var(--lp-fg, #111827);
   }
   .typora-tree-summary:focus-visible {
-    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline: 2px solid rgba(10, 132, 255, 0.65);
     outline-offset: 2px;
-    background: rgba(37, 99, 235, 0.08);
-    color: #111827;
+    background: rgba(10, 132, 255, 0.12);
+    color: var(--lp-fg, #111827);
   }
   .typora-tree-caret {
     width: 16px;
@@ -86,7 +86,8 @@ const href = node.slug ? `${base}posts/${node.slug}`.replace(/\/+/g, '/') : '';
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #9ca3af;
+    color: var(--lp-muted, #9ca3af);
+    opacity: 0.72;
     transform-origin: center;
     transition: transform 120ms ease;
   }
@@ -95,7 +96,8 @@ const href = node.slug ? `${base}posts/${node.slug}`.replace(/\/+/g, '/') : '';
     align-items: center;
     justify-content: center;
     width: 16px;
-    color: #9ca3af;
+    color: var(--lp-muted, #9ca3af);
+    opacity: 0.72;
   }
   .typora-tree-link,
   .typora-tree-leaf {
@@ -104,26 +106,26 @@ const href = node.slug ? `${base}posts/${node.slug}`.replace(/\/+/g, '/') : '';
     gap: 6px;
     padding: 6px 8px;
     border-radius: 6px;
-    color: #6b7280;
+    color: var(--lp-muted, #6b7280);
     text-decoration: none;
     font-weight: 500;
     font-size: 13px;
   }
   .typora-tree-link:hover,
   .typora-tree-leaf:hover {
-    background: rgba(0, 0, 0, 0.03);
-    color: #111827;
+    background: var(--lp-hover, rgba(0, 0, 0, 0.03));
+    color: var(--lp-fg, #111827);
   }
   .typora-tree-link:focus-visible,
   .typora-tree-leaf:focus-visible {
-    outline: 2px solid rgba(37, 99, 235, 0.55);
+    outline: 2px solid rgba(10, 132, 255, 0.65);
     outline-offset: 2px;
-    background: rgba(37, 99, 235, 0.08);
-    color: #111827;
+    background: rgba(10, 132, 255, 0.12);
+    color: var(--lp-fg, #111827);
   }
   .typora-tree-leaf.is-active {
-    background: rgba(0, 0, 0, 0.07);
-    color: #111827;
+    background: var(--lp-hover-strong, rgba(0, 0, 0, 0.07));
+    color: var(--lp-fg, #111827);
     font-weight: 600;
   }
   .typora-tree-children {

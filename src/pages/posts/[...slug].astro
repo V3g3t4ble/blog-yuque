@@ -1,31 +1,43 @@
 ---
-import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import { getPostDate } from '../../utils/date';
 import TyporaPost from '../../themes/typora/TyporaPost.astro';
 import { renderMarkdownToHtml } from '../../utils/markdown';
 import { SiteConfig } from '../../config';
 import CryptoJS from 'crypto-js';
+import { getAllPosts, getPostById, isSSRMode } from '../../services/posts';
+
+export const prerender = !isSSRMode();
 
 export async function getStaticPaths() {
-  const posts = await getCollection('posts');
-  return posts.map(entry => ({
-    params: { slug: entry.id }, props: { entry },
-  }));
+  if (!prerender) return [];
+  const posts = await getAllPosts();
+  return posts.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 }
 
-const { entry } = Astro.props;
-const postDate = getPostDate(entry);
+let entry: any = Astro.props.entry ?? null;
+if (!entry) {
+  const param = Astro.params.slug;
+  const slug = Array.isArray(param) ? param.join('/') : String(param ?? '');
+  entry = await getPostById(slug);
+}
+
+if (!entry) {
+  Astro.response.status = 404;
+}
+
+const safeEntry = entry ?? { id: '', body: '', data: { title: '404' } };
+const postDate = getPostDate(safeEntry);
 const countWords = (text: string) => {
   const cjk = (text.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu) || []).length;
   const nonCjk = text.replace(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu, ' ');
   const words = nonCjk.trim().split(/\s+/).filter(Boolean).length;
   return cjk + words;
 };
-const words = countWords(entry.body || '');
+const words = countWords(safeEntry.body || '');
 const readMinutes = Math.max(1, Math.round(words / 300));
-const createdDate = entry.data.date || postDate;
-const updatedDate = entry.data.updated || postDate;
+const createdDate = safeEntry.data.date || postDate;
+const updatedDate = safeEntry.data.updated || postDate;
 const meta = {
   created: createdDate.toISOString().split('T')[0],
   updated: updatedDate.toISOString().split('T')[0],
@@ -33,12 +45,16 @@ const meta = {
   readMinutes,
 };
 
-const isLocked = entry.data.locked === true;
+const isLocked = safeEntry.data.locked === true;
 const encryptedHtml = isLocked && SiteConfig.password
-  ? CryptoJS.AES.encrypt(renderMarkdownToHtml(entry.body ?? ''), SiteConfig.password).toString()
+  ? CryptoJS.AES.encrypt(renderMarkdownToHtml(safeEntry.body ?? ''), SiteConfig.password).toString()
   : null;
 ---
 
-<Layout title={entry.data.title} currentSlug={entry.id} meta={meta} locked={entry.data.locked}>
-  {encryptedHtml ? <TyporaPost encryptedHtml={encryptedHtml} /> : <TyporaPost content={entry.body ?? ''} />}
+<Layout title={safeEntry.data.title} currentSlug={safeEntry.id} meta={meta} locked={safeEntry.data.locked}>
+  {!entry ? (
+    <div style="padding: 24px;">文章不存在</div>
+  ) : (
+    encryptedHtml ? <TyporaPost encryptedHtml={encryptedHtml} /> : <TyporaPost content={safeEntry.body ?? ''} />
+  )}
 </Layout>

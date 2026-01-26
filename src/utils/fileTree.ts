@@ -1,4 +1,4 @@
-import type { CollectionEntry } from 'astro:content';
+import type { PostEntry } from '../types/post';
 
 export interface TreeNode {
   name: string;
@@ -10,7 +10,7 @@ export interface TreeNode {
   path: string;
 }
 
-export function buildFileTree(posts: CollectionEntry<'posts'>[]): TreeNode[] {
+export function buildFileTree(posts: PostEntry[]): TreeNode[] {
   const root: TreeNode[] = [];
 
   posts.forEach((post) => {

@@ -9,6 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/node": "^9.1.0",
     "@astrojs/tailwind": "^6.0.2",
     "@tailwindcss/typography": "^0.5.19",
     "astro": "^5.16.8",
@@ -19,5 +20,8 @@
     "marked": "^17.0.1",
     "slugify": "^1.6.6",
     "tailwindcss": "^3.4.19"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.1"
   }
 }
