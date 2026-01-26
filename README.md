@@ -12,6 +12,7 @@
 ## 部署
 Fork本项目，在Cloudflare Pages中部署，配置环境变量
 - `BLOG_PASSWORD`：博客登录密码
+- `BLOG_RENDER_MODE`：渲染模式，建议保持 `ssg`（或不设置）。`ssr` 会切换到 Node Adapter，不适用于 Cloudflare Pages。
 - `YUQUE_TOKEN`：Yuque API Token
 - `YUQUE_LOGIN`：Yuque用户登录名（或组织登录名）
 - `YUQUE_REPO`：Yuque知识库（Repo）的Slug

@@ -6,8 +6,16 @@ import node from '@astrojs/node';
 // https://astro.build/config
 export default defineConfig({
   integrations: [tailwind()],
-  output: process.env.BLOG_RENDER_MODE === 'ssr' ? 'server' : 'static',
-  adapter: process.env.BLOG_RENDER_MODE === 'ssr' ? node({ mode: 'standalone' }) : undefined,
+  ...(process.env.BLOG_RENDER_MODE === 'ssr' && (process.env.CF_PAGES || process.env.CF_PAGES_URL)
+    ? (console.warn('[config] CF Pages detected: forcing static output (BLOG_RENDER_MODE=ssr is not supported on Pages).'),
+      {
+        output: 'static',
+        adapter: undefined,
+      })
+    : {
+        output: process.env.BLOG_RENDER_MODE === 'ssr' ? 'server' : 'static',
+        adapter: process.env.BLOG_RENDER_MODE === 'ssr' ? node({ mode: 'standalone' }) : undefined,
+      }),
   // GitHub Pages deployment configuration
   // Replace 'https://<user>.github.io' with your site's URL
   // Replace '/<project-name>' with your project's repository name if not at root
